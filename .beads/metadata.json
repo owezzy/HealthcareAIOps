@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "HealthcareAIOps",
+  "project_id": "8cfce3b0-2bf5-4980-924a-af657c734008"
+}
