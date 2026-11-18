@@ -1,19 +1,25 @@
 # Simulated K3s worker "node-2" on owezzy-db (ADR-0013): a real Kubernetes
 # node that runs as a Docker container on the same host, so scenario S5 can
-# fail a node without a second VPS. Tainted so only the simulated estate runs
-# here. Setup, checks and removal: docs/how-to/add-simulated-node-2.md
+# fail a node without a second VPS. Joins with a canary taint first, so
+# nothing schedules until verify.sh passes. How-to: docs/how-to/add-simulated-node-2.md
 name: aiops-node2
 
 services:
   node-2:
-    image: rancher/k3s:v1.37.2-k3s1   # must match the server's K3s version
+    image: rancher/k3s:v1.37.2-k3s1   # must match the server's K3s version (preflight.sh checks)
     container_name: aiops-node-2
     hostname: node-2
+    entrypoint: ["/node2/entrypoint.sh"]   # cgroup v2 preparation, then k3s
     command:
       - agent
       - --node-name=node-2
       - --node-label=aiops.io/estate=true
+      # Estate-only, and (until verified) nothing at all. Taints apply at first
+      # registration; verify.sh removes the canary taint once the node is proven.
       - --node-taint=aiops.io/estate=only:NoSchedule
+      - --node-taint=aiops.io/canary=true:NoExecute
+      # Docker's embedded DNS (127.0.0.11) is loopback and unusable by pods.
+      - --resolv-conf=/node2/resolv.conf
     environment:
       # The address must be in the API server certificate (161.97.181.164 is).
       K3S_URL: https://161.97.181.164:6443
@@ -21,11 +27,20 @@ services:
     privileged: true                  # required for a kubelet and containerd inside Docker
     tmpfs: [/run, /var/run]
     volumes:
+      - ./entrypoint.sh:/node2/entrypoint.sh:ro
+      - ./resolv.conf:/node2/resolv.conf:ro
       - node2-data:/var/lib/rancher/k3s
+      # Node password: losing it makes the server reject the node's rejoin.
+      - node2-identity:/etc/rancher/node
     networks:
       node2:
         ipv4_address: 172.31.250.10
-    mem_limit: 512m                   # host kubelet evicts below 500 MiB free
+    # Hard caps so a misbehaving node cannot starve the host. The host kubelet
+    # evicts production pods below 500 MiB free.
+    mem_limit: 512m
+    memswap_limit: 512m
+    cpus: 1.0
+    pids_limit: 2048
     # Survives host reboots, but stays down after `docker stop` (S5 recovery is deliberate).
     restart: unless-stopped
 
@@ -38,3 +53,4 @@ networks:
 
 volumes:
   node2-data:
+  node2-identity:
