@@ -1,0 +1,78 @@
+/* C-17, from docs/design/mockups/assets/console.css (.budget) */
+:host {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 30px;
+    padding: 0 9px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--panel);
+}
+
+.budget-label {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.05em;
+    color: var(--text-3);
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.budget-value {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-2);
+    white-space: nowrap;
+}
+
+.budget-track {
+    width: 56px;
+    height: 5px;
+    border-radius: 2px;
+    background: var(--panel-3);
+    overflow: hidden;
+    flex: none;
+}
+
+.budget-fill {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+    transition: width 300ms var(--ease);
+}
+
+.budget-fill[data-tone='warn'] {
+    background: var(--sev-medium);
+}
+
+.budget-fill[data-tone='exhausted'] {
+    background: var(--sev-critical);
+}
+
+/* Spend unknown: a neutral hatched bar, so it never reads as "nothing spent". */
+.budget-fill[data-tone='unknown'] {
+    background: repeating-linear-gradient(
+        135deg,
+        var(--text-3) 0 3px,
+        transparent 3px 6px
+    );
+}
+
+@media (max-width: 720px) {
+    :host {
+        padding: 0 7px;
+    }
+    .budget-label {
+        display: none;
+    }
+    .budget-track {
+        width: 40px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .budget-fill {
+        transition: none;
+    }
+}

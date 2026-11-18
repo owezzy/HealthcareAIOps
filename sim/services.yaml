@@ -1,0 +1,119 @@
+# Simulated healthcare IT estate: the single source of truth for components,
+# clinical tiers and dependencies. Validated by aiops_contracts.catalogue
+# (run: uv run pytest packages/contracts).
+#
+# Clinical tiers:
+#   1 = direct care delivery affected within minutes, no safe workaround
+#   2 = clinical workflow degraded, manual workaround exists
+#   3 = non-clinical or patient convenience service
+version: 1
+
+components:
+  # --- Kubernetes nodes -------------------------------------------------------
+  - id: node-1
+    name: K3s worker node 1
+    kind: node
+    tier: 1
+    owner_team: platform
+
+  - id: node-2
+    name: K3s worker node 2
+    kind: node
+    tier: 1
+    owner_team: platform
+
+  - id: node-3
+    name: K3s worker node 3
+    kind: node
+    tier: 1
+    owner_team: platform
+
+  # --- Data stores -------------------------------------------------------------
+  - id: sso-db
+    name: SSO database
+    kind: database
+    tier: 1
+    hosted_on: node-1
+    owner_team: identity
+
+  - id: ehr-db
+    name: EHR database
+    kind: database
+    tier: 1
+    hosted_on: node-1
+    owner_team: clinical-systems
+
+  - id: lis-db
+    name: LIS database
+    kind: database
+    tier: 1
+    hosted_on: node-3
+    owner_team: clinical-systems
+
+  - id: pacs-store
+    name: PACS image store volume
+    kind: volume
+    tier: 1
+    hosted_on: node-3
+    owner_team: storage
+
+  # --- Applications --------------------------------------------------------------
+  - id: sso
+    name: Identity provider (SSO)
+    kind: application
+    tier: 1
+    hosted_on: node-1
+    depends_on: [sso-db]
+    departments: [All staff applications]
+    owner_team: identity
+    scaling: { min: 2, max: 6 }
+
+  - id: ehr-api
+    name: Electronic health record API
+    kind: application
+    tier: 1
+    hosted_on: node-1
+    depends_on: [ehr-db, sso]
+    departments: [Wards, Emergency department, Outpatients]
+    owner_team: clinical-systems
+    scaling: { min: 2, max: 8 }
+
+  - id: interface-engine
+    name: HL7/FHIR interface engine
+    kind: application
+    tier: 1
+    hosted_on: node-2
+    depends_on: [lis, pacs, ehr-api]
+    departments: [Pathology, Radiology, Wards]
+    owner_team: integration
+    scaling: { min: 2, max: 4 }
+
+  - id: lis
+    name: Laboratory information system
+    kind: application
+    tier: 1
+    hosted_on: node-2
+    depends_on: [lis-db, sso]
+    departments: [Pathology, Wards]
+    owner_team: clinical-systems
+    scaling: { min: 1, max: 4 }
+
+  - id: pacs
+    name: Picture archiving and communication system
+    kind: application
+    tier: 1
+    hosted_on: node-2
+    depends_on: [pacs-store, sso]
+    departments: [Radiology, Emergency department]
+    owner_team: imaging
+    scaling: { min: 1, max: 3 }
+
+  - id: patient-portal
+    name: Patient portal
+    kind: application
+    tier: 3
+    hosted_on: node-3
+    depends_on: [ehr-api, sso]
+    departments: [Patients]
+    owner_team: digital
+    scaling: { min: 1, max: 4 }

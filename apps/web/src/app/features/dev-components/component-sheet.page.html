@@ -1,0 +1,150 @@
+<h1 class="mb-1 text-2xl font-semibold text-ops-text">Component sheet</h1>
+<p class="mb-6 text-ops-text-2">
+    Shared components with INC-1042 sample data. Last interaction:
+    <span class="mono">{{ lastEvent() }}</span>
+</p>
+
+<section aria-labelledby="h-triage">
+    <h2 id="h-triage">
+        Triage labels <span class="code">C-01 · C-02 · C-03</span>
+    </h2>
+    <div class="row">
+        <app-severity-badge severity="critical" />
+        <app-severity-badge severity="high" />
+        <app-severity-badge severity="medium" />
+        <app-severity-badge severity="low" />
+    </div>
+    <div class="row">
+        <app-tier-badge [tier]="1" />
+        <app-tier-badge [tier]="2" />
+        <app-tier-badge [tier]="3" />
+        <app-tier-badge tier="infra" />
+    </div>
+    <div class="row">
+        <app-status-pill state="open" />
+        <app-status-pill state="investigating" />
+        <app-status-pill state="awaiting_approval" />
+        <app-status-pill state="mitigated" />
+        <app-status-pill state="resolved_with_problem" />
+        <app-status-pill state="rejected" />
+    </div>
+</section>
+
+<section aria-labelledby="h-stepper">
+    <h2 id="h-stepper">Lifecycle stepper <span class="code">C-05</span></h2>
+    <app-lifecycle-stepper state="awaiting_approval" />
+    <app-lifecycle-stepper
+        state="resolved_with_problem"
+        followUp="Problem PRB-208"
+    />
+</section>
+
+<section aria-labelledby="h-evidence">
+    <h2 id="h-evidence">
+        Evidence and provenance
+        <span class="code">C-06 · C-07 · C-08 · C-09</span>
+    </h2>
+    <div class="row">
+        <app-evidence-chip
+            [evidence]="{ id: 'ev_7f3a' }"
+            (open)="onEvidence($event)"
+        />
+        <app-evidence-chip
+            [evidence]="{ id: 'ev_19c2', source: 'k8s_event' }"
+            (open)="onEvidence($event)"
+        />
+        <app-evidence-chip
+            [evidence]="{ id: 'ev_9a01', source: 'log' }"
+            [expanded]="true"
+            (open)="onEvidence($event)"
+        />
+    </div>
+    <div class="row">
+        <app-confidence-pill level="high" />
+        <app-confidence-pill level="medium" />
+        <app-confidence-pill level="low" />
+    </div>
+    <div class="grid-2">
+        <div class="ai-panel">
+            <app-provenance-header
+                model="openai/model-tbd"
+                promptVersion="v1"
+                streamedAt="2026-11-17T09:18:00Z"
+            />
+        </div>
+        <div class="ai-panel" style="padding: 12px">
+            <app-findings-skeleton [committed]="2" [total]="4" />
+        </div>
+    </div>
+</section>
+
+<section aria-labelledby="h-findings">
+    <h2 id="h-findings">
+        Findings hierarchy <span class="code">C-10 · C-11 · C-12</span>
+    </h2>
+    <div class="grid-2">
+        <div class="stack">
+            @for (fact of facts; track fact.statement) {
+            <app-fact-row [fact]="fact" (evidenceOpen)="onEvidence($event)" />
+            }
+        </div>
+        <div class="stack">
+            @for (hypothesis of hypotheses; track hypothesis.component; let i =
+            $index) {
+            <app-hypothesis-card
+                [hypothesis]="hypothesis"
+                [rank]="i + 1"
+                (evidenceOpen)="onEvidence($event)"
+            />
+            }
+        </div>
+        <div class="stack">
+            <app-missing-info
+                [items]="['No heap profile available for lis.']"
+            />
+            <app-injection-notice
+                [flag]="injection"
+                (evidenceOpen)="onEvidence($event)"
+            />
+        </div>
+    </div>
+</section>
+
+<section aria-labelledby="h-action">
+    <h2 id="h-action">
+        Action and approval <span class="code">C-13 · C-14 · C-15 · C-16</span>
+    </h2>
+    <div class="grid-2">
+        <app-action-card
+            [proposal]="proposal"
+            [approval]="approval"
+            [role]="session.role()"
+            (approve)="lastEvent.set('approve ' + $event.id)"
+            (review)="lastEvent.set('review ' + $event.id)"
+            (evidenceOpen)="onEvidence($event)"
+        />
+        <div class="stack">
+            <div class="row">
+                <app-approval-countdown [expiresAt]="approval.expiresAt" />
+                <app-approval-countdown [expiresAt]="nearlyExpired" />
+            </div>
+            <app-outcome-banner
+                outcome="executed"
+                detail="Executed 09:25 · verification passed · audit recorded"
+                [hash]="approvalHash"
+            />
+            <app-outcome-banner
+                outcome="rejected"
+                detail="Rejected · reason recorded in the audit log"
+            />
+            <app-role-note tone="info"
+                >You are viewing as <strong>Operator</strong>. Investigation is
+                open; approval requires an Approver.</app-role-note
+            >
+            <app-role-note tone="deny"
+                >Viewer role cannot approve. Switch to Approver to grant this
+                action.</app-role-note
+            >
+        </div>
+    </div>
+</section>

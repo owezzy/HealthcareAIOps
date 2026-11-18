@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>Healthcare AIOps · Agent console</title>
+        <meta charset="utf-8" />
+        <meta
+            name="description"
+            content="Approval-gated AI investigation agent for healthcare IT operations. Synthetic data only."
+        />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <base href="/" />
+
+        <link rel="icon" type="image/png" href="/favicon-16x16.png" />
+        <link rel="icon" type="image/png" href="/favicon-32x32.png" />
+
+        <!-- Splash screen styles (fonts are self-hosted, see src/main.ts) -->
+        <link href="/styles/splash-screen.css" rel="stylesheet" />
+    </head>
+
+    <body>
+        <!-- Splash screen -->
+        <fuse-splash-screen>
+            <svg
+                width="40"
+                height="40"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#48d3c0"
+                stroke-width="1.9"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-label="Healthcare AIOps"
+            >
+                <path d="M2.8 13h4.1l2.2-6.2 4.1 12.4 2.4-7.2H21" />
+            </svg>
+            <div class="spinner">
+                <div class="bounce1"></div>
+                <div class="bounce2"></div>
+                <div class="bounce3"></div>
+            </div>
+        </fuse-splash-screen>
+
+        <!-- App root -->
+        <app-root></app-root>
+        <script type="module" src="/main.ts"></script>
+    </body>
+</html>

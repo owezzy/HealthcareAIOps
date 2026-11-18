@@ -1,0 +1,58 @@
+# Workspace root (not a package). Python members are listed under [tool.uv.workspace].
+# Layout and dependency rules: docs/explanation/architecture.md
+[project]
+name = "healthcare-aiops"
+# Project release version, managed by Commitizen (`uv run cz bump`); see docs/how-to/cut-a-release.md.
+version = "0.0.0"
+description = "Approval-gated AI investigation agent for healthcare IT operations."
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = ["aiops-contracts", "aiops-api", "aiops-agent"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "httpx>=0.28",
+    "ruff>=0.8",
+    "commitizen>=4",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+# Explicit list: services/ also holds Node services (copilot-runtime).
+members = ["packages/contracts", "services/api", "services/agent"]
+
+[tool.uv.sources]
+aiops-contracts = { workspace = true }
+aiops-api = { workspace = true }
+aiops-agent = { workspace = true }
+
+[tool.pytest.ini_options]
+testpaths = ["packages", "services"]
+addopts = ["--import-mode=importlib"]
+# Starlette nudges towards a newer HTTP client; httpx is still what TestClient uses.
+filterwarnings = ["ignore:Using `httpx` with `starlette.testclient`"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["aiops_contracts", "aiops_api", "aiops_agent"]
+
+[tool.commitizen]
+# Conventional Commits, enforced by the commit-msg hook (.husky/commit-msg).
+name = "cz_conventional_commits"
+version_provider = "pep621"
+tag_format = "v$version"
+major_version_zero = true
+update_changelog_on_bump = true
+changelog_file = "CHANGELOG.md"
+# Image tags Flux deploys move with the release version (ADR-0009).
+version_files = ["deploy/overlays/demo/kustomization.yaml:newTag"]
+

@@ -1,0 +1,16 @@
+[project]
+name = "aiops-agent"
+version = "0.1.0"
+description = "LangGraph investigation agent served over AG-UI."
+requires-python = ">=3.14"
+dependencies = [
+    "ag-ui-langgraph[fastapi]>=0.0.47",
+    "fastapi>=0.115",
+    "httpx>=0.28",
+    "langgraph>=1.2",
+    "uvicorn[standard]>=0.32",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

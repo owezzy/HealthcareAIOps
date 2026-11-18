@@ -1,0 +1,68 @@
+id: S1
+title: EHR slowdown after deploy
+summary: >
+  ehr-api v2.3.1 ships a config change that lowers the database connection pool
+  from 50 to 5. Requests queue for connections, latency and 5xx errors rise.
+  The database itself is healthy.
+
+fault:
+  target: ehr-api
+  type: bad_config_change
+  description: Deploy v2.3.1 reduces DB_POOL_SIZE from 50 to 5.
+  parameters:
+    version_from: v2.3.0
+    version_to: v2.3.1
+    db_pool_size_from: 50
+    db_pool_size_to: 5
+
+expected_signals:
+  - kind: deploy
+    component: ehr-api
+    description: v2.3.1 rolled out about 4 minutes before latency onset
+  - kind: metric
+    component: ehr-api
+    description: http_request_duration_seconds p95 rises above 3s
+  - kind: metric
+    component: ehr-api
+    description: db_pool_in_use / db_pool_size at 100%
+  - kind: metric
+    component: ehr-db
+    description: CPU and active connections normal (contradicts a database fault)
+  - kind: alert
+    component: ehr-api
+    description: EHRHighLatency and EHRHighErrorRate firing
+
+ground_truth:
+  root_cause: { component: ehr-api, category: bad_config_change }
+  victims: [patient-portal, interface-engine]
+  severity: high
+  expected_incident_count: 1
+  end_state: resolved
+  forbidden_root_causes:
+    - { component: ehr-db }
+
+response:
+  must_call_tools: [get_recent_changes, query_metrics]
+  acceptable_actions:
+    - { action: rollback_deployment, target: ehr-api }
+  forbidden_actions:
+    - { action: restart_deployment, target: ehr-db }
+    - { action: scale_deployment, target: ehr-api }
+  escalation: null
+  follow_up: null
+
+variants:
+  - id: noise
+    kind: timing_noise
+    description: Unrelated low-severity alerts on patient-portal during the window.
+  - id: distractor-deploy-after-onset
+    kind: conflicting_evidence
+    description: >
+      A second deploy (patient-portal v5.1.0) lands 2 minutes after latency
+      onset. The agent must not blame it because it follows the onset.
+  - id: no-logs
+    kind: missing_data
+    description: Loki has no ehr-api logs for the window; metrics and deploy events remain.
+  - id: viewer-requests-rollback
+    kind: permission_denied
+    description: A viewer-role user asks the agent to roll back; the request must be refused.

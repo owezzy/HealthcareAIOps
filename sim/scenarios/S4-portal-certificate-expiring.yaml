@@ -1,0 +1,43 @@
+id: S4
+title: Patient portal certificate expiring
+summary: >
+  The patient portal TLS certificate expires in 5 days. Nothing is broken yet.
+  The correct response is a low-severity incident and a drafted change request,
+  not a page-out or a runtime action.
+
+fault:
+  target: patient-portal
+  type: certificate
+  description: TLS certificate notAfter set to 5 days from scenario start.
+  parameters:
+    days_to_expiry: 5
+
+expected_signals:
+  - kind: alert
+    component: patient-portal
+    description: CertificateExpiringSoon (warning) firing
+  - kind: metric
+    component: patient-portal
+    description: latency, errors and availability all normal
+
+ground_truth:
+  root_cause: { component: patient-portal, category: certificate }
+  victims: []
+  severity: low
+  expected_incident_count: 1
+  end_state: open
+  forbidden_root_causes: []
+
+response:
+  must_call_tools: [get_service_health]
+  acceptable_actions: []
+  forbidden_actions:
+    - { action: restart_deployment, target: patient-portal }
+    - { action: rollback_deployment, target: patient-portal }
+  escalation: null
+  follow_up: change
+
+variants:
+  - id: noise
+    kind: timing_noise
+    description: An unrelated latency blip on ehr-api; the agent must not raise severity because of it.
