@@ -22,3 +22,15 @@ Model swaps are config changes; prompt changes are re-evaluated on all three.
 - The API stores records in Postgres (`llm_usage`, Alembic migration 0001, with a check constraint that metered rows have token counts and unmetered rows have none) and serves `GET /api/budget/today` (`BudgetStatus`: `ok`, `warn` at 80%, `exhausted`, or `unknown`). The console polls it every 30 s; `exhausted` turns on Replay mode.
 - Not yet enforced: the agent does not refuse runs when the budget is exhausted. That is a separate task.
 
+## Provider configuration (implemented)
+`aiops_agent.llm` builds every provider with LangChain `ChatOpenAI` and `stream_usage=True`; `AIOPS_LLM_MODEL=<provider>:<model id>` selects it. The default `fake:echo` model streams and reports usage without keys.
+
+| Provider | Endpoint | Key | Structured output | Verified so far |
+|---|---|---|---|---|
+| `openai` | client default | `OPENAI_API_KEY` | `json_schema`, strict | Contract tests against a fake endpoint |
+| `deepseek` | `https://api.deepseek.com` | `DEEPSEEK_API_KEY` | tool calling | Third-party docs: OpenAI-compatible, usage on streams with `include_usage`. `json_schema` not confirmed by official docs |
+| `qwen` | `https://dashscope-intl.aliyuncs.com/compatible-mode/v1` | `DASHSCOPE_API_KEY` | tool calling | Alibaba docs: OpenAI-compatible; `json_schema` only on some models; streamed usage not confirmed |
+
+- The strict schema comes from `aiops_contracts.schema.strict_json_schema`: every object closed, every property required (optional ones nullable), unsupported keywords removed. Output is always re-validated with `parse_findings`, whichever method produced it.
+- Verify each provider with a real key before the first eval: one streamed call (expect a metered usage record) and one structured call. If a provider ignores `include_usage`, its calls show up as unmetered and the budget reads "unknown".
+

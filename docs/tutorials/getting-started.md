@@ -80,7 +80,9 @@ Open <http://localhost:5173>.
 
 Open <http://localhost:5173/spike/assistant> and send a message.
 
-The reply reads `Spike OK. Agent received: <your message>`. That message went from Angular to the CopilotKit runtime, to the LangGraph agent over AG-UI, and back. No LLM is involved yet: the spike agent only echoes, so no API key is needed.
+The reply streams in word by word: `Spike OK. Agent received: <your message>`. That message went from Angular to the CopilotKit runtime, to the LangGraph agent over AG-UI, and back.
+
+By default the agent uses `fake:echo`, a keyless model that behaves like a real provider: it streams, and it reports token usage. Each message is recorded as an LLM call, priced at zero, so the budget meter stays at `$0.00`. To use a real model, set `AIOPS_LLM_MODEL` and the provider's key (see [Configuration](../reference/configuration.md)).
 
 ## 7. Run the checks
 

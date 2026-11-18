@@ -1,0 +1,184 @@
+"""Chat model configuration for OpenAI, DeepSeek and Qwen (ADR-0008).
+
+All three are reached through one OpenAI-compatible client (LangChain
+`ChatOpenAI`), so a model is configuration, not code:
+
+    AIOPS_LLM_MODEL=<provider>:<model id>      e.g. openai:<model>, deepseek:<model>, qwen:<model>
+    AIOPS_LLM_MODEL=fake:echo                  local development and tests (default)
+
+Every client streams with `stream_usage=True`: runs stream over AG-UI, and a
+streamed response only reports token usage when the client asks for it. A
+provider that still sends none is recorded as unmetered (aiops_agent.usage).
+
+Exact model versions are pinned in ADR-0008 when the first eval runs; this
+module deliberately ships no default real model.
+"""
+
+import os
+from collections.abc import Iterator, Mapping
+from dataclasses import dataclass
+from typing import Any, Literal
+
+import httpx
+from langchain_core.language_models import BaseChatModel
+from langchain_core.messages import AIMessage, AIMessageChunk, BaseMessage, HumanMessage
+from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResult
+from langchain_core.runnables import Runnable
+from langchain_openai import ChatOpenAI
+
+from aiops_contracts.findings import Findings
+from aiops_contracts.schema import strict_json_schema
+
+DEFAULT_MODEL = "fake:echo"
+StructuredMethod = Literal["json_schema", "function_calling"]
+
+
+@dataclass(frozen=True)
+class Provider:
+    name: str
+    base_url: str | None  # None: the client library's default (OpenAI)
+    api_key_env: str
+    #: json_schema (strict) where the provider guarantees it; tool calling otherwise.
+    structured_method: StructuredMethod
+
+
+PROVIDERS: dict[str, Provider] = {
+    "openai": Provider("openai", None, "OPENAI_API_KEY", "json_schema"),
+    "deepseek": Provider(
+        "deepseek", "https://api.deepseek.com", "DEEPSEEK_API_KEY", "function_calling"
+    ),
+    "qwen": Provider(
+        "qwen",
+        "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
+        "DASHSCOPE_API_KEY",
+        "function_calling",
+    ),
+}
+
+
+class ModelConfigError(ValueError):
+    """The configured model cannot be built (bad spec or missing key)."""
+
+
+@dataclass(frozen=True)
+class ModelSpec:
+    provider: str
+    model: str
+
+    @classmethod
+    def parse(cls, spec: str) -> ModelSpec:
+        provider, sep, model = spec.partition(":")
+        if not sep or not model:
+            raise ModelConfigError(f"model must look like '<provider>:<model id>', got {spec!r}")
+        if provider != "fake" and provider not in PROVIDERS:
+            known = ", ".join(["fake", *PROVIDERS])
+            raise ModelConfigError(f"unknown provider {provider!r}; known: {known}")
+        return cls(provider, model)
+
+
+def make_chat_model(
+    spec: str,
+    env: Mapping[str, str] = os.environ,
+    http_client: httpx.Client | None = None,
+    http_async_client: httpx.AsyncClient | None = None,
+) -> BaseChatModel:
+    """Build the chat model for `<provider>:<model id>`.
+
+    `AIOPS_LLM_BASE_URL` overrides the provider's endpoint (other regions, proxies).
+    """
+    parsed = ModelSpec.parse(spec)
+    if parsed.provider == "fake":
+        return FakeEchoChatModel()
+    provider = PROVIDERS[parsed.provider]
+    api_key = env.get(provider.api_key_env)
+    if not api_key:
+        raise ModelConfigError(f"{provider.api_key_env} is not set for {spec!r}")
+    return ChatOpenAI(
+        model=parsed.model,
+        api_key=api_key,
+        base_url=env.get("AIOPS_LLM_BASE_URL") or provider.base_url,
+        stream_usage=True,
+        temperature=0,
+        timeout=60,
+        max_retries=2,
+        http_client=http_client,
+        http_async_client=http_async_client,
+    )
+
+
+def model_from_env(env: Mapping[str, str] = os.environ) -> BaseChatModel:
+    return make_chat_model(env.get("AIOPS_LLM_MODEL", DEFAULT_MODEL), env)
+
+
+def structured_findings(model: BaseChatModel, spec: str) -> Runnable:
+    """A runnable that returns raw Findings JSON (as a dict) from the model.
+
+    Validate the result with `aiops_contracts.findings.parse_findings`:
+    provider-side enforcement is a convenience, the contract is the authority.
+    """
+    provider = ModelSpec.parse(spec).provider
+    method = PROVIDERS[provider].structured_method if provider in PROVIDERS else "json_schema"
+    schema = {
+        "title": "Findings",
+        "description": "Typed findings for one incident investigation.",
+        **strict_json_schema(Findings),
+    }
+    return model.with_structured_output(schema, method=method, strict=method == "json_schema")
+
+
+class FakeEchoChatModel(BaseChatModel):
+    """Deterministic local model: echoes the last user message, streaming word by word.
+
+    Reports usage like a correctly configured provider, so the usage and
+    budget path is exercised without API keys. Priced at zero in
+    config/model-prices.yaml.
+    """
+
+    model_name: str = "fake-echo"
+
+    @property
+    def _llm_type(self) -> str:
+        return "fake-echo"
+
+    def _reply(self, messages: list[BaseMessage]) -> str:
+        last = next((m for m in reversed(messages) if isinstance(m, HumanMessage)), None)
+        return f"Spike OK. Agent received: {last.text if last else '(no message)'}"
+
+    def _usage(self, messages: list[BaseMessage], reply: str) -> dict[str, int]:
+        input_tokens = sum(len(m.text.split()) for m in messages)
+        output_tokens = len(reply.split())
+        return {
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "total_tokens": input_tokens + output_tokens,
+        }
+
+    def _generate(
+        self, messages: list[BaseMessage], stop: Any = None, run_manager: Any = None, **kwargs: Any
+    ) -> ChatResult:
+        reply = self._reply(messages)
+        message = AIMessage(
+            content=reply,
+            response_metadata={"model_name": self.model_name},
+            usage_metadata=self._usage(messages, reply),
+        )
+        return ChatResult(generations=[ChatGeneration(message=message)])
+
+    def _stream(
+        self, messages: list[BaseMessage], stop: Any = None, run_manager: Any = None, **kwargs: Any
+    ) -> Iterator[ChatGenerationChunk]:
+        reply = self._reply(messages)
+        words = reply.split(" ")
+        for index, word in enumerate(words):
+            text = word if index == len(words) - 1 else f"{word} "
+            chunk = ChatGenerationChunk(message=AIMessageChunk(content=text))
+            if run_manager:
+                run_manager.on_llm_new_token(text, chunk=chunk)
+            yield chunk
+        yield ChatGenerationChunk(
+            message=AIMessageChunk(
+                content="",
+                response_metadata={"model_name": self.model_name},
+                usage_metadata=self._usage(messages, reply),
+            )
+        )

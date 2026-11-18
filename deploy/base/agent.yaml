@@ -25,6 +25,10 @@ spec:
         - name: agent
           image: healthcare-aiops-agent
           ports: [{ name: http, containerPort: 8123 }]
+          # Optional secret aiops-llm: AIOPS_LLM_MODEL plus the provider API keys.
+          # Without it the agent runs the keyless fake:echo model.
+          envFrom:
+            - secretRef: { name: aiops-llm, optional: true }
           env:
             - { name: AIOPS_API_URL, value: "http://api.aiops-app.svc.cluster.local:8000" }
             - name: AIOPS_INTERNAL_TOKEN

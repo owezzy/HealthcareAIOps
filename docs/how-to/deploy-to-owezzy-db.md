@@ -41,6 +41,15 @@ kubectl -n aiops-app create secret generic aiops-secrets \
 
 The API runs its Alembic migrations in an init container on start, so you do not migrate by hand.
 
+**Optional: a real model.** Without this secret the agent runs the keyless `fake:echo` model. To use a provider, create `aiops-llm` with the model and its key, then restart the agent:
+
+```bash
+kubectl -n aiops-app create secret generic aiops-llm \
+  --from-literal=AIOPS_LLM_MODEL='openai:<model id>' \
+  --from-literal=OPENAI_API_KEY='<key>'
+kubectl -n aiops-app rollout restart deployment/agent
+```
+
 ## 3. Create the Cloudflare tunnel
 
 1. In Cloudflare Zero Trust, create a tunnel named `healthcare-aiops` (connector type: cloudflared). Copy its token.
