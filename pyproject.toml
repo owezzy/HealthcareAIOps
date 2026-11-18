@@ -7,7 +7,7 @@ version = "0.0.0"
 description = "Approval-gated AI investigation agent for healthcare IT operations."
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = ["aiops-contracts", "aiops-api", "aiops-agent"]
+dependencies = ["aiops-contracts", "aiops-api", "aiops-agent", "aiops-sim"]
 
 [dependency-groups]
 dev = [
@@ -22,15 +22,16 @@ package = false
 
 [tool.uv.workspace]
 # Explicit list: services/ also holds Node services (copilot-runtime).
-members = ["packages/contracts", "services/api", "services/agent"]
+members = ["packages/contracts", "services/api", "services/agent", "sim"]
 
 [tool.uv.sources]
 aiops-contracts = { workspace = true }
 aiops-api = { workspace = true }
 aiops-agent = { workspace = true }
+aiops-sim = { workspace = true }
 
 [tool.pytest.ini_options]
-testpaths = ["packages", "services"]
+testpaths = ["packages", "services", "sim"]
 addopts = ["--import-mode=importlib"]
 # Starlette nudges towards a newer HTTP client; httpx is still what TestClient uses.
 filterwarnings = ["ignore:Using `httpx` with `starlette.testclient`"]
@@ -43,7 +44,7 @@ target-version = "py314"
 select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["aiops_contracts", "aiops_api", "aiops_agent"]
+known-first-party = ["aiops_contracts", "aiops_api", "aiops_agent", "aiops_sim"]
 
 [tool.commitizen]
 # Conventional Commits, enforced by the commit-msg hook (.husky/commit-msg).

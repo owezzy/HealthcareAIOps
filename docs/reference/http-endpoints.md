@@ -51,6 +51,18 @@ The full schema is also served by FastAPI at `GET /docs` and `GET /openapi.json`
 
 Served by CopilotKit under `/api/copilotkit`: `GET /info` (version and declared agents; used as the readiness probe), `POST /agent/:agentId/run`, `POST /agent/:agentId/connect` and the thread routes. The agent ID is `default`.
 
+## Demo services (port 8080, namespace `aiops-estate`)
+
+| Method and path | Response |
+|---|---|
+| `GET /health` | `200`, or `503` while toggled unavailable |
+| `GET /work` | One unit of work: call application dependencies, use the database pool, write to the volume. `200`, `502` (dependency or SSO failed), `503` (pool exhausted or unavailable), `507` (volume full) |
+| `POST /messages` | `interface-engine` only. `{"destination": "lis"}` queues a message; `202`, or `422` for a non-dependency |
+| `GET /metrics` | Prometheus: `http_requests_total`, `http_request_duration_seconds`, `dependency_errors_total`, `auth_upstream_errors_total`, `db_pool_in_use`, `db_pool_size`, `queue_depth`, `volume_used_ratio`, `certificate_expiry_days`, `app_info` |
+| `GET` / `PUT` / `DELETE /admin/faults` | Bearer `AIOPS_ESTATE_ADMIN_TOKEN`. Toggles: `unavailable`, `extra_latency_ms`, `volume_used_percent`, `certificate_days_left` |
+
+Logs are JSON lines on stdout: `ts`, `level`, `component`, `msg`.
+
 ## Web (port 8080 in the image)
 
 `GET /healthz` returns `ok` (liveness). Every other unknown path serves `index.html` (single-page app).

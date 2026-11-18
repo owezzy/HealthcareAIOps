@@ -3,7 +3,7 @@
 # Postgres first: `make db` (Docker) or point AIOPS_DATABASE_URL at your own, then `make migrate`.
 
 .DEFAULT_GOAL := help
-.PHONY: help install install-py install-runtime install-web install-hooks db migrate dev agent runtime web api test lint format build check
+.PHONY: manifests help install install-py install-runtime install-web install-hooks db migrate dev agent runtime web api test lint format build check
 
 AGENT_PORT ?= 8123
 API_PORT   ?= 8000
@@ -65,6 +65,9 @@ format: ## Format Python and frontend/backend JavaScript and TypeScript
 	uv run ruff check packages services --fix
 	uv run ruff format packages services
 	npm run format
+
+manifests: ## Regenerate deploy/estate/estate.yaml from sim/services.yaml
+	uv run python -m aiops_sim.manifests > deploy/estate/estate.yaml
 
 build: ## Production build of the Angular app
 	cd apps/web && npm run build

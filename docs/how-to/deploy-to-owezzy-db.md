@@ -41,6 +41,13 @@ kubectl -n aiops-app create secret generic aiops-secrets \
 
 The API runs its Alembic migrations in an init container on start, so you do not migrate by hand.
 
+The simulated estate (namespace `aiops-estate`) needs its admin token for fault injection. Without it the services run, but their fault toggles refuse every call:
+
+```bash
+kubectl create namespace aiops-estate
+kubectl -n aiops-estate create secret generic estate-admin --from-literal=token="$(openssl rand -hex 32)"
+```
+
 **Optional: a real model.** Without this secret the agent runs the keyless `fake:echo` model. To use a provider, create `aiops-llm` with the model and its key, then restart the agent:
 
 ```bash

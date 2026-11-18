@@ -19,6 +19,7 @@ Run from the repository root. `make help` prints the same list.
 | `make test` | Python tests. API adapter tests start a throwaway Postgres if `AIOPS_TEST_DATABASE_URL` is not set |
 | `make lint` | Ruff, ESLint and the runtime type-check |
 | `make format` | Ruff fix and format, then Prettier |
+| `make manifests` | Regenerate `deploy/estate/estate.yaml` from `sim/services.yaml` (a test fails if you forget) |
 | `make build` | Production build of the Angular app |
 | `make check` | `lint`, `test` and `build`: what CI runs |
 

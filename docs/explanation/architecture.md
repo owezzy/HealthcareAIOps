@@ -10,6 +10,8 @@ coding agents. The *what* and *why* of the product lives in
 | I need to… | Put it in |
 |---|---|
 | Add or change a simulated service, tier or dependency | `sim/services.yaml` (validated by `aiops_contracts.catalogue`) |
+| Change how a simulated service behaves | `sim/src/aiops_sim/app.py` (tests: `sim/tests/test_estate.py`) |
+| Change estate placement, limits or tuning | `sim/src/aiops_sim/manifests.py`, then `make manifests` |
 | Add or change a demo/eval scenario | `sim/scenarios/S<n>-<slug>.yaml` (validated by `aiops_contracts.scenarios`) |
 | Add a value shared by more than one process (enum, payload, LLM output schema) | `packages/contracts/src/aiops_contracts/` |
 | Add an API endpoint | `services/api/src/aiops_api/<context>/http.py` → calls a use case in `<context>/use_cases.py` |
@@ -33,7 +35,7 @@ services/api/         aiops_api: FastAPI domain API (bounded contexts, hexagonal
 services/agent/       aiops_agent: LangGraph graph served over AG-UI (spike now; investigation graph week 3)
 services/copilot-runtime/  Node: CopilotKit runtime, browser-facing AG-UI proxy (ADR-0004)
 services/executor/    allowlisted K8s actions, scoped creds    (week 5)
-sim/                  services.yaml, scenarios/, later the demo services + fault injector
+sim/                  services.yaml, scenarios/, aiops_sim (demo services, load generator, manifest generator)
 evals/                datasets, telemetry snapshots, runners, reports  (week 4)
 apps/web/             Angular 22 (Fuse template) + CopilotKit; nginx image is the public entry point
 config/               model-prices.yaml (LLM cost)

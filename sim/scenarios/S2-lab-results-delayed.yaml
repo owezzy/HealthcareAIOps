@@ -8,10 +8,10 @@ summary: >
 fault:
   target: lis
   type: resource_exhaustion
-  description: lis memory limit set below working-set size under normal load.
+  description: lis memory limit lowered below its working set (BALLAST_MI 80 plus runtime).
   parameters:
-    memory_limit_mi: 256
-    working_set_mi: 410
+    memory_limit_mi: 96      # normal limit 160 Mi (deploy/estate)
+    working_set_mi: 130      # 80 Mi ballast + ~50 Mi Python runtime
 
 expected_signals:
   - kind: k8s_event

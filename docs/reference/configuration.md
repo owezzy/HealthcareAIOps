@@ -25,6 +25,24 @@ Every service reads its configuration from environment variables at start-up.
 | `DEEPSEEK_API_KEY` | *(unset)* | Required for `deepseek:*` (endpoint `https://api.deepseek.com`) |
 | `DASHSCOPE_API_KEY` | *(unset)* | Required for `qwen:*` (endpoint `https://dashscope-intl.aliyuncs.com/compatible-mode/v1`) |
 
+## Demo services (`sim`, image `healthcare-aiops-estate`)
+
+One image runs every simulated hospital service; `COMPONENT_ID` picks which. The fault injector changes the tuning values through real rollouts.
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `COMPONENT_ID` | *(required)* | Catalogue application: `sso`, `ehr-api`, `interface-engine`, `lis`, `pacs`, `patient-portal` |
+| `AIOPS_CATALOGUE` | `sim/services.yaml` | Catalogue file; dependencies come from it |
+| `AIOPS_ESTATE_ADMIN_TOKEN` | *(unset)* | Bearer token for `/admin/faults`. Unset: the admin endpoints refuse every call |
+| `DB_POOL_SIZE` | `50` | Connection pool to the component's database (S1 lowers it) |
+| `DB_QUERY_MS` | `20` | Time each request holds a pool connection |
+| `WORK_CPU_MS` | `2` | Real CPU work per request (S6 throttles it) |
+| `BALLAST_MI` | `0` | Resident memory held for the process lifetime (S2 sets a limit below it) |
+| `DEPENDENCY_TIMEOUT_S` | `2` | Timeout for calls to dependencies |
+| `APP_VERSION` | `v1.0.0` | Reported as `app_info`; a changed version is a deploy |
+| `PEER_URL_PATTERN` | `http://{id}:8080` | How to reach another component |
+| `RATE_PER_SECOND` | `2` | Load generator only: requests per second |
+
 ## Copilot runtime (`services/copilot-runtime`)
 
 | Variable | Default | Meaning |
