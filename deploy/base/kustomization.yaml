@@ -1,0 +1,15 @@
+# App tier for owezzy-db (ADR-0012). Overlays set images and secrets.
+# Database: the cluster's shared pgvector Postgres (namespace postgres), own database and role.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - namespaces.yaml
+  - api.yaml
+  - agent.yaml
+  - copilot-runtime.yaml
+  - web.yaml
+  - cloudflared.yaml
+  - network-policies.yaml
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: healthcare-aiops

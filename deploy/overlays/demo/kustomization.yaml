@@ -1,0 +1,21 @@
+# aiops.owenadirah.com on owezzy-db (ADR-0012). Flux applies this path from
+# release tags (ADR-0009). Secrets are created on the cluster, not stored in
+# git: see docs/how-to/deploy-to-owezzy-db.md.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+images:
+  # newTag is bumped by Commitizen during each git flow release (docs/how-to/cut-a-release.md).
+  - name: healthcare-aiops-api
+    newName: ghcr.io/owezzy/healthcare-aiops-api
+    newTag: 0.0.0
+  - name: healthcare-aiops-agent
+    newName: ghcr.io/owezzy/healthcare-aiops-agent
+    newTag: 0.0.0
+  - name: healthcare-aiops-copilot-runtime
+    newName: ghcr.io/owezzy/healthcare-aiops-copilot-runtime
+    newTag: 0.0.0
+  - name: healthcare-aiops-web
+    newName: ghcr.io/owezzy/healthcare-aiops-web
+    newTag: 0.0.0
