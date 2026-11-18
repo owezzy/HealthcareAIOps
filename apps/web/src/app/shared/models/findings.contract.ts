@@ -67,7 +67,8 @@ export interface FindingsWire {
     evidence: EvidenceWire[];
     confirmed_facts: FactWire[];
     hypotheses: HypothesisWire[];
-    root_cause: HypothesisWire | null;
+    /** 1-based rank into hypotheses; null when not established. */
+    root_cause_rank: number | null;
     clinical_impact: string;
     missing_information: string[];
     suspected_injection: string[];
@@ -114,6 +115,8 @@ export function toFindingsView(wire: FindingsWire): FindingsView {
         contradicting: refs(h.contradicting_evidence),
     });
 
+    const hypotheses = wire.hypotheses.map(hypothesis);
+
     return {
         incidentId: wire.incident_id,
         summary: wire.summary,
@@ -121,8 +124,11 @@ export function toFindingsView(wire: FindingsWire): FindingsView {
             statement: f.statement,
             evidence: refs(f.evidence_ids),
         })),
-        hypotheses: wire.hypotheses.map(hypothesis),
-        rootCause: wire.root_cause ? hypothesis(wire.root_cause) : null,
+        hypotheses,
+        rootCause:
+            wire.root_cause_rank === null
+                ? null
+                : hypotheses[wire.root_cause_rank - 1] ?? null,
         clinicalImpact: wire.clinical_impact,
         missingInformation: wire.missing_information,
         injections: wire.suspected_injection.map((id) => ({

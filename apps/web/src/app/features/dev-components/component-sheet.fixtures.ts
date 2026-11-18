@@ -79,7 +79,7 @@ const S2_FINDINGS: FindingsWire = {
             contradicting_evidence: ['ev_44de'],
         },
     ],
-    root_cause: null,
+    root_cause_rank: 1,
     clinical_impact: 'Tier 1: Pathology and wards wait for lab results.',
     missing_information: ['No heap profile available for lis.'],
     suspected_injection: ['ev_9a01'],

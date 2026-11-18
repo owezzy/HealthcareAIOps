@@ -5,7 +5,7 @@ renders and the evals score. Two layers of checks guard it:
 
 1. The model itself (Pydantic validators): every cited evidence ID exists in
    the findings' own evidence set, facts cite at least one item, the root
-   cause is one of the hypotheses, and no proposal rests on evidence flagged
+   cause points at an existing hypothesis, and no proposal rests on evidence flagged
    as a prompt injection.
 2. `findings_errors(findings, catalogue)`: every component and action target
    exists, and every proposed action is valid for its target (ADR-0002,
@@ -89,8 +89,11 @@ class Findings(_Contract):
     evidence: tuple[Evidence, ...]
     confirmed_facts: tuple[Fact, ...]
     hypotheses: tuple[Hypothesis, ...]
-    root_cause: Hypothesis | None = Field(
-        default=None, description="None means the root cause is not established"
+    root_cause_rank: int | None = Field(
+        default=None,
+        ge=1,
+        description="Rank (1 = first) of the hypothesis established as the root cause; "
+        "null when the root cause is not established",
     )
     clinical_impact: str = Field(min_length=1)
     missing_information: tuple[str, ...] = ()
@@ -125,9 +128,19 @@ class Findings(_Contract):
                 raise ValueError(
                     f"proposal {n} rests on evidence flagged as prompt injection {sorted(tainted)}"
                 )
-        if self.root_cause is not None and self.root_cause not in self.hypotheses:
-            raise ValueError("root_cause must be one of the hypotheses")
+        if self.root_cause_rank is not None and self.root_cause_rank > len(self.hypotheses):
+            raise ValueError(
+                f"root_cause_rank {self.root_cause_rank} is not a hypothesis "
+                f"(there are {len(self.hypotheses)})"
+            )
         return self
+
+    @property
+    def root_cause(self) -> Hypothesis | None:
+        """The hypothesis established as the root cause, if any."""
+        if self.root_cause_rank is None:
+            return None
+        return self.hypotheses[self.root_cause_rank - 1]
 
 
 def findings_errors(findings: Findings, catalogue: Catalogue) -> list[str]:

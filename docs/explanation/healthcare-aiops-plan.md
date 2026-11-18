@@ -213,12 +213,12 @@ The agent's final output is `Findings` (`packages/contracts/src/aiops_contracts/
 | `Fact` | `statement`, `evidence_ids` (at least one). No confidence: facts are observed, not inferred |
 | `Hypothesis` | `component`, `category` (root-cause enum), `statement`, `confidence`, `supporting_evidence`, `contradicting_evidence` |
 | `ActionProposal` | `action` (catalogue enum), `target`, `replicas` (scale only), `rationale`, `risk`, `expected_outcome`, `rollback`, `follow_up`, `evidence_ids` |
-| `Findings` | `incident_id`, `summary`, `evidence`, `confirmed_facts`, `hypotheses` (ranked), `root_cause` (one of the hypotheses, or null), `clinical_impact`, `missing_information`, `suspected_injection`, `proposals`, `escalation` |
+| `Findings` | `incident_id`, `summary`, `evidence`, `confirmed_facts`, `hypotheses` (ranked), `root_cause_rank` (1-based rank of the established hypothesis, or null), `clinical_impact`, `missing_information`, `suspected_injection`, `proposals`, `escalation` |
 
 Validation, with plain messages the agent gets back for its one repair attempt (`parse_findings`):
 
 - Every cited evidence ID exists in the findings' own `evidence`; no duplicates.
-- `root_cause`, when set, is one of the `hypotheses`.
+- `root_cause_rank`, when set, points at an existing hypothesis. It is a reference, not a copy: an earlier design repeated the whole hypothesis, and a real model (Nemotron 3 Nano 4B) repeated it imperfectly.
 - **No proposal may cite evidence listed in `suspected_injection`.** Injected text can be reported, never acted on.
 - Against the catalogue (`findings_errors`): hypothesis components exist; proposals target applications only; `scale_deployment` stays inside the component's scaling range; other actions take no replicas.
 

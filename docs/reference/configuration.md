@@ -20,6 +20,7 @@ Every service reads its configuration from environment variables at start-up.
 | `AIOPS_MODEL_PRICES` | `config/model-prices.yaml` | Price table for LLM cost. A missing file or unpriced model records cost as unknown |
 | `AIOPS_LLM_MODEL` | `fake:echo` (`make dev`: `ollama:nemotron-3-nano:4b`) | `<provider>:<model id>`. Providers: `openai`, `deepseek`, `qwen`, `ollama` and `fake` (keyless, local). Ollama model IDs keep their own colons, e.g. `ollama:<name>:cloud`. An unknown provider or missing key stops the agent at start-up |
 | `AIOPS_LLM_BASE_URL` | provider default | Overrides the provider endpoint: another DashScope region, or an Ollama daemon other than `http://localhost:11434/v1` (needed in the cluster) |
+| `AIOPS_LLM_TIMEOUT_SECONDS` | `60` (Ollama: `300`) | Per-request timeout for the model. Local models need minutes, not seconds |
 | `OPENAI_API_KEY` | *(unset)* | Required for `openai:*` |
 | `DEEPSEEK_API_KEY` | *(unset)* | Required for `deepseek:*` (endpoint `https://api.deepseek.com`) |
 | `DASHSCOPE_API_KEY` | *(unset)* | Required for `qwen:*` (endpoint `https://dashscope-intl.aliyuncs.com/compatible-mode/v1`) |

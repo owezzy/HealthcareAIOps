@@ -44,6 +44,8 @@ class Provider:
     structured_method: StructuredMethod
     #: Ask the provider to enforce the schema exactly (only where it is documented to).
     strict: bool = False
+    #: Per-request timeout. Local models on a laptop need far longer than hosted APIs.
+    timeout_seconds: float = 60.0
 
 
 PROVIDERS: dict[str, Provider] = {
@@ -59,7 +61,9 @@ PROVIDERS: dict[str, Provider] = {
     ),
     # Ollama's OpenAI-compatible API on the local daemon. Cloud models
     # (`*:cloud`) are proxied by the daemon and billed as Ollama credits.
-    "ollama": Provider("ollama", "http://localhost:11434/v1", None, "json_schema"),
+    "ollama": Provider(
+        "ollama", "http://localhost:11434/v1", None, "json_schema", timeout_seconds=300.0
+    ),
 }
 
 
@@ -109,7 +113,7 @@ def make_chat_model(
         base_url=env.get("AIOPS_LLM_BASE_URL") or provider.base_url,
         stream_usage=True,
         temperature=0,
-        timeout=60,
+        timeout=float(env.get("AIOPS_LLM_TIMEOUT_SECONDS") or provider.timeout_seconds),
         max_retries=2,
         http_client=http_client,
         http_async_client=http_async_client,

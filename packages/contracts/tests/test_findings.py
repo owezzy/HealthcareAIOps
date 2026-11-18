@@ -59,7 +59,7 @@ def s2_findings() -> dict:
             },
         ],
         "hypotheses": [lis_oom],
-        "root_cause": lis_oom,
+        "root_cause_rank": 1,
         "clinical_impact": "Tier 1: Pathology and wards wait for lab results.",
         "missing_information": ["No heap profile for lis."],
         "suspected_injection": ["ev_9a01"],
@@ -105,14 +105,27 @@ def test_fact_without_evidence_is_rejected(catalogue) -> None:
 def test_hypothesis_naming_unknown_component_is_rejected(catalogue) -> None:
     raw = s2_findings()
     raw["hypotheses"][0]["component"] = "lab-mainframe"
-    raw["root_cause"] = raw["hypotheses"][0]
     assert errors_for(raw, catalogue) == ["hypothesis 1 names unknown component 'lab-mainframe'"]
 
 
-def test_root_cause_must_be_one_of_the_hypotheses(catalogue) -> None:
+def test_root_cause_rank_must_point_at_a_hypothesis(catalogue) -> None:
     raw = s2_findings()
-    raw["root_cause"] = {**raw["hypotheses"][0], "confidence": "low"}
-    assert any("root_cause must be one of the hypotheses" in e for e in errors_for(raw, catalogue))
+    raw["root_cause_rank"] = 2
+    assert any("root_cause_rank 2 is not a hypothesis" in e for e in errors_for(raw, catalogue))
+
+
+def test_root_cause_rank_starts_at_one(catalogue) -> None:
+    raw = s2_findings()
+    raw["root_cause_rank"] = 0
+    assert any("root_cause_rank" in e for e in errors_for(raw, catalogue))
+
+
+def test_root_cause_resolves_to_the_ranked_hypothesis(catalogue) -> None:
+    findings, _ = parse_findings(s2_findings(), catalogue)
+    assert findings.root_cause == findings.hypotheses[0]
+    raw = s2_findings()
+    raw["root_cause_rank"] = None
+    assert parse_findings(raw, catalogue)[0].root_cause is None
 
 
 def test_proposal_resting_on_injected_evidence_is_rejected(catalogue) -> None:

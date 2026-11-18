@@ -161,7 +161,7 @@ def _valid_findings() -> dict:
         ],
         "confirmed_facts": [{"statement": "LIS restarted 6 times.", "evidence_ids": ["ev_19c2"]}],
         "hypotheses": [],
-        "root_cause": None,
+        "root_cause_rank": None,
         "clinical_impact": "Tier 1: lab results delayed.",
         "missing_information": [],
         "suspected_injection": [],
@@ -265,3 +265,10 @@ def test_ollama_uses_non_strict_json_schema(fake_openai) -> None:
     assert response_format["json_schema"].get("strict") in (None, False)
     _findings, errors = parse_findings(output, load_catalogue(SIM / "services.yaml"))
     assert errors == []
+
+
+def test_timeouts_default_per_provider_and_can_be_overridden() -> None:
+    assert make_chat_model("openai:m", KEYS).request_timeout == 60.0
+    assert make_chat_model("ollama:m", {}).request_timeout == 300.0
+    env = {"AIOPS_LLM_TIMEOUT_SECONDS": "15"}
+    assert make_chat_model("ollama:m", env).request_timeout == 15.0
