@@ -64,7 +64,7 @@ flowchart LR
 
 1. **`aiops_contracts` depends on nothing in this repo.** Everything may depend on it. It holds what crosses a process or file boundary: enums, the catalogue, scenarios, and later the `Findings` schema and API payloads. Pydantic is allowed here because these *are* boundary schemas.
 2. **Services never import each other.** `api`, `agent` and `executor` talk over HTTP/MCP using `aiops_contracts` types.
-3. **Inside a service, organise by bounded context first, then by layer.** Contexts in `api`: `usage` (LLM usage and the daily budget, built), `incidents` (incidents, problems, changes, correlation), `governance` (approvals, policy, audit), `ingestion` (alert webhook). A context folder looks like:
+3. **Inside a service, organise by bounded context first, then by layer.** Contexts in `api`: `usage` (LLM usage and the daily budget, built), `ingestion` (Alertmanager webhook, built), `correlation` (alerts to incidents, built; worker process), `incidents` (incidents, problems, changes, correlation), `governance` (approvals, policy, audit). A context folder looks like:
 
    ```text
    aiops_api/incidents/

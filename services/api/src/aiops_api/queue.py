@@ -1,7 +1,7 @@
 """Postgres job queue (ADR-0003): jobs are inserted in the producer's own
 transaction and consumed with SELECT ... FOR UPDATE SKIP LOCKED.
 
-Schema owned by migrations/versions/0002_alerts_and_jobs.py.
+Schema owned by migrations/versions/0002_alerts_and_jobs.py and 0003_incidents.py.
 """
 
 from sqlalchemy import (
@@ -12,6 +12,7 @@ from sqlalchemy import (
     Integer,
     String,
     Table,
+    Text,
     func,
 )
 from sqlalchemy.dialects.postgresql import JSONB, insert
@@ -29,6 +30,7 @@ jobs = Table(
     Column("attempts", Integer, nullable=False, server_default="0"),
     Column("available_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
     Column("created_at", DateTime(timezone=True), nullable=False, server_default=func.now()),
+    Column("last_error", Text, nullable=True),
 )
 
 

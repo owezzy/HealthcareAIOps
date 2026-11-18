@@ -8,6 +8,7 @@ from dataclasses import dataclass
 DEFAULT_DATABASE_URL = "postgresql+psycopg://aiops:aiops@localhost:5432/aiops"
 DEFAULT_DAILY_LLM_BUDGET_USD = 5.0
 DEFAULT_DAILY_LLM_CALL_CAP = 300
+DEFAULT_CATALOGUE = "sim/services.yaml"
 
 
 @dataclass(frozen=True)
@@ -18,6 +19,8 @@ class Settings:
     daily_llm_budget_usd: float
     #: Calls per UTC day; caps models whose cost is unknown (ADR-0008).
     daily_llm_call_cap: int = DEFAULT_DAILY_LLM_CALL_CAP
+    #: Component catalogue (topology for correlation and blast radius).
+    catalogue_path: str = DEFAULT_CATALOGUE
 
     @classmethod
     def from_env(cls) -> Settings:
@@ -32,4 +35,5 @@ class Settings:
             internal_token=os.environ.get("AIOPS_INTERNAL_TOKEN") or None,
             daily_llm_budget_usd=budget,
             daily_llm_call_cap=call_cap,
+            catalogue_path=os.environ.get("AIOPS_CATALOGUE", DEFAULT_CATALOGUE),
         )

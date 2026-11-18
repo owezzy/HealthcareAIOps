@@ -1,0 +1,25 @@
+# Correlation worker (ADR-0005): consumes correlate jobs from the Postgres
+# queue and groups alerts into incidents. Same image as the API.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: correlator
+  namespace: aiops-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: correlator }
+  template:
+    metadata:
+      labels: { app: correlator }
+    spec:
+      securityContext: { runAsNonRoot: true }
+      containers:
+        - name: correlator
+          image: healthcare-aiops-api
+          command: ["python", "-m", "aiops_api.correlation.worker"]
+          envFrom: [{ secretRef: { name: aiops-secrets } }]
+          resources:
+            requests: { cpu: 20m, memory: 96Mi }
+            limits: { memory: 192Mi }
+          securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true }

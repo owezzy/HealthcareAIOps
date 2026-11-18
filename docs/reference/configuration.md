@@ -9,6 +9,7 @@ Every service reads its configuration from environment variables at start-up.
 | `AIOPS_DATABASE_URL` | `postgresql+psycopg://aiops:aiops@localhost:5432/aiops` | SQLAlchemy URL of the API database. Also used by `make migrate` |
 | `AIOPS_INTERNAL_TOKEN` | *(unset)* | Service token for `/internal/*`. **Unset means every internal call is refused** (fail closed) |
 | `AIOPS_DAILY_LLM_BUDGET_USD` | `5.0` | Daily LLM spend cap. Must be positive. `exhausted` at or above it, `warn` from 80% |
+| `AIOPS_CATALOGUE` | `sim/services.yaml` | Component catalogue used by the correlator (topology) |
 | `AIOPS_DAILY_LLM_CALL_CAP` | `300` | Daily cap on model calls. Must be positive. Bounds models whose cost is unknown; `exhausted` at or above it, `warn` from 80% |
 
 ## Agent (`services/agent`)

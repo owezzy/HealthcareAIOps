@@ -107,7 +107,7 @@ def test_invalid_payloads_are_rejected(client, alert_store, mutate) -> None:
 def pg_store(postgres_url) -> PostgresAlertStore:
     engine = make_engine(postgres_url)
     with engine.begin() as connection:
-        connection.execute(text("TRUNCATE alerts, jobs RESTART IDENTITY"))
+        connection.execute(text("TRUNCATE alerts, jobs RESTART IDENTITY CASCADE"))
     return PostgresAlertStore(engine)
 
 

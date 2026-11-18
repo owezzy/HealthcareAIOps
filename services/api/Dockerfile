@@ -17,6 +17,8 @@ COPY --from=build /app/.venv /app/.venv
 # Alembic config and migrations, run by the deployment's init container.
 COPY services/api/alembic.ini services/api/alembic.ini
 COPY services/api/migrations services/api/migrations
+# Topology for correlation (AIOPS_CATALOGUE default: sim/services.yaml).
+COPY sim/services.yaml sim/services.yaml
 ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1
 USER 10001
 EXPOSE 8000

@@ -5,6 +5,7 @@ kind: Kustomization
 resources:
   - namespaces.yaml
   - api.yaml
+  - correlator.yaml
   - agent.yaml
   - copilot-runtime.yaml
   - web.yaml

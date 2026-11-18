@@ -3,7 +3,7 @@
 # Postgres first: `make db` (Docker) or point AIOPS_DATABASE_URL at your own, then `make migrate`.
 
 .DEFAULT_GOAL := help
-.PHONY: scenario scenario-reset scenario-status manifests help install install-py install-runtime install-web install-hooks db migrate dev agent runtime web api test lint format build check
+.PHONY: correlator scenario scenario-reset scenario-status manifests help install install-py install-runtime install-web install-hooks db migrate dev agent runtime web api test lint format build check
 
 AGENT_PORT ?= 8123
 API_PORT   ?= 8000
@@ -38,8 +38,11 @@ db: ## Start local Postgres in Docker (compose.yaml)
 migrate: ## Apply database migrations (Alembic)
 	cd services/api && uv run alembic upgrade head
 
-dev: ## Run api, agent, runtime and web together (http://localhost:5173)
-	$(MAKE) -j4 api agent runtime web
+dev: ## Run api, correlator, agent, runtime and web together (http://localhost:5173)
+	$(MAKE) -j5 api correlator agent runtime web
+
+correlator: ## Run the correlation worker (alerts -> incidents)
+	uv run python -m aiops_api.correlation.worker
 
 agent: ## Run the LangGraph agent (AG-UI on :8123/agent)
 	uv run uvicorn aiops_agent.app:create_app --factory --port $(AGENT_PORT) --reload

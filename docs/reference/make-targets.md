@@ -11,7 +11,8 @@ Run from the repository root. `make help` prints the same list.
 | `make install-hooks` | `npm ci` at the root: ESLint, Prettier, lint-staged and the husky Git hooks |
 | `make db` | Starts Postgres 18 from `compose.yaml` (Docker) and waits until it is healthy |
 | `make migrate` | `alembic upgrade head` for the API, against `AIOPS_DATABASE_URL` |
-| `make dev` | Runs `api`, `agent`, `runtime` and `web` in parallel; Ctrl-C stops all four |
+| `make dev` | Runs `api`, `correlator`, `agent`, `runtime` and `web` in parallel; Ctrl-C stops all five |
+| `make correlator` | Correlation worker: turns queued alerts into incidents |
 | `make api` | API on port 8000, with reload |
 | `make agent` | Agent on port 8123 (AG-UI at `/agent`), with reload |
 | `make runtime` | CopilotKit runtime on port 4000 (`/api/copilotkit`), with reload |
