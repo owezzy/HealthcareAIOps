@@ -14,10 +14,10 @@ Run `node-2` as a K3s **agent inside a Docker container** on `owezzy-db` (`deplo
 - Own Docker network `172.31.250.0/24`. Two firewall rules let that subnet reach the API server (6443/tcp) and flannel VXLAN (8472/udp).
 - Label `aiops.io/estate=true` and taint `aiops.io/estate=only:NoSchedule`, so only the simulated estate schedules there. Estate workloads **prefer** node-2 and tolerate a not-ready node for 30 s, so S5 reschedules them onto `owezzy-db`, as the scenario expects.
 
-How S5 fails the node (implemented with the fault injector, week 2):
+How S5 fails the node (`aiops_sim.injector`, run on the host):
 
-1. **Preferred, in-cluster and reversible:** a privileged injector pod pinned to node-2 with `hostPID` sends `SIGSTOP` to the node's `k3s agent` process. Heartbeats stop, so the node goes `NotReady` after about 40 s. `SIGCONT` from the same pod recovers it. Containerd keeps running, so the injector survives.
-2. **Fallback, manual:** `docker stop aiops-node-2` on the host, then `docker start`.
+- `docker pause aiops-node-2` freezes the whole node through the cgroup freezer, the way a hung machine stops: the kubelet stops heartbeating and the node goes `NotReady`; its pods freeze with it. `docker unpause` thaws it.
+- *Corrected 2026-11-18:* the earlier plan, a privileged pod sending `SIGSTOP` to the node's `k3s agent`, cannot work. Inside the node container K3s is PID 1, and the kernel ignores `SIGSTOP` sent to a namespace's init process from within that namespace.
 
 ## Risk assessment (2026-11-18)
 Evidence: read-only checks on `owezzy-db`, K3s documentation, k3d's cgroup v2 entrypoint and K3s issues #13072 and #6054.

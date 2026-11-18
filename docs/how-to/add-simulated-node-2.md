@@ -65,7 +65,7 @@ kubectl get node node-2 -w      # NotReady after about 50 s (measured: 49 s)
 sudo docker start aiops-node-2  # Ready again within seconds (measured: 5 s)
 ```
 
-The fault injector (week 2) does the same from inside the cluster with `SIGSTOP` and `SIGCONT`, as described in ADR-0013.
+The fault injector does the same with `docker pause` and `docker unpause` (`make scenario S=S5`), which freezes the node instead of stopping it; see [Run a scenario](run-a-scenario.md).
 
 ## If something fails
 

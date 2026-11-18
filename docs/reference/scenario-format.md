@@ -21,7 +21,19 @@ Files: `sim/scenarios/S<n>-<slug>.yaml`. Schema: `aiops_contracts.scenarios.Scen
 | `target` | component ID | Must equal `ground_truth.root_cause.component` |
 | `type` | root-cause category | Must equal `ground_truth.root_cause.category` |
 | `description` | string | |
-| `parameters` | map | Free-form; read by the fault injector |
+| `parameters` | map | Read by the fault injector; unknown keys are refused. See below |
+
+### Fault parameters the injector understands
+
+| Key | Effect |
+|---|---|
+| `db_pool_size_to`, `version_to` (with `_from` values) | Rollout of the target with new `DB_POOL_SIZE` and `APP_VERSION` |
+| `memory_limit_mi` (with informational `working_set_mi`) | Memory request and limit lowered on the target |
+| `cpu_limit_millicores` | CPU limit on the target |
+| `login_rate_per_second` | Load generator rate (with `cpu_limit_millicores`) |
+| `used_percent` | Admin toggle `volume_used_percent` on the one application that writes to the target volume |
+| `days_to_expiry` | Admin toggle `certificate_days_left` on the target |
+| target is `node-2` (with informational `not_ready_after_seconds`) | `docker pause` of the node container |
 
 ## `expected_signals[]`
 

@@ -11,9 +11,8 @@ fault:
   type: resource_exhaustion
   description: Login surge drives sso CPU to its limit (throttled); 2 replicas.
   parameters:
-    replicas: 2
-    cpu_throttled_percent: 85
-    auth_latency_seconds: 8
+    cpu_limit_millicores: 50      # from 250m (deploy/estate); WORK_CPU_MS=5 per login
+    login_rate_per_second: 20     # load generator surge, from 2
 
 expected_signals:
   - kind: metric

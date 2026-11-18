@@ -3,7 +3,7 @@
 # Postgres first: `make db` (Docker) or point AIOPS_DATABASE_URL at your own, then `make migrate`.
 
 .DEFAULT_GOAL := help
-.PHONY: manifests help install install-py install-runtime install-web install-hooks db migrate dev agent runtime web api test lint format build check
+.PHONY: scenario scenario-reset scenario-status manifests help install install-py install-runtime install-web install-hooks db migrate dev agent runtime web api test lint format build check
 
 AGENT_PORT ?= 8123
 API_PORT   ?= 8000
@@ -65,6 +65,15 @@ format: ## Format Python and frontend/backend JavaScript and TypeScript
 	uv run ruff check packages services --fix
 	uv run ruff format packages services
 	npm run format
+
+scenario: ## Inject a scenario's fault into the live estate, e.g. make scenario S=S2 (run on owezzy-db)
+	uv run python -m aiops_sim.injector apply $(S)
+
+scenario-reset: ## Undo the active scenario
+	uv run python -m aiops_sim.injector reset
+
+scenario-status: ## Show the active scenario, if any
+	uv run python -m aiops_sim.injector status
 
 manifests: ## Regenerate deploy/estate/estate.yaml from sim/services.yaml
 	uv run python -m aiops_sim.manifests > deploy/estate/estate.yaml
