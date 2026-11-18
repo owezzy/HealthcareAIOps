@@ -30,7 +30,9 @@ Model swaps are config changes; prompt changes are re-evaluated on all three.
 | `openai` | client default | `OPENAI_API_KEY` | `json_schema`, strict | Contract tests against a fake endpoint |
 | `deepseek` | `https://api.deepseek.com` | `DEEPSEEK_API_KEY` | tool calling | Third-party docs: OpenAI-compatible, usage on streams with `include_usage`. `json_schema` not confirmed by official docs |
 | `qwen` | `https://dashscope-intl.aliyuncs.com/compatible-mode/v1` | `DASHSCOPE_API_KEY` | tool calling | Alibaba docs: OpenAI-compatible; `json_schema` only on some models; streamed usage not confirmed |
+| `ollama` | `http://localhost:11434/v1` (override with `AIOPS_LLM_BASE_URL`) | none | `json_schema`, not strict | Contract tests only. On 2026-11-18 the local daemon (0.40.16) reported `nemotron-3-nano:30b` retired on 2026-11-09 (suggesting `glm-5.3-flash:cloud`), and every `:cloud` model required Ollama usage credits |
 
 - The strict schema comes from `aiops_contracts.schema.strict_json_schema`: every object closed, every property required (optional ones nullable), unsupported keywords removed. Output is always re-validated with `parse_findings`, whichever method produced it.
 - Verify each provider with a real key before the first eval: one streamed call (expect a metered usage record) and one structured call. If a provider ignores `include_usage`, its calls show up as unmetered and the budget reads "unknown".
 
+- Ollama `:cloud` models are billed as Ollama credits with no per-token price in `config/model-prices.yaml`, so their cost records as unknown. The daily call cap (budget enforcement) is what limits them.

@@ -33,6 +33,7 @@ PROVIDER_HOSTS = {
     "openai": ("api.openai.com", "sk-openai"),
     "deepseek": ("api.deepseek.com", "sk-deepseek"),
     "qwen": ("dashscope-intl.aliyuncs.com", "sk-qwen"),
+    "ollama": ("localhost:11434", "not-needed"),
 }
 
 
@@ -97,7 +98,7 @@ def test_base_url_override_wins(fake_openai) -> None:
 # --- streamed usage through the AG-UI agent (task acceptance) -------------------
 
 
-@pytest.mark.parametrize("provider", ["openai", "deepseek", "qwen"])
+@pytest.mark.parametrize("provider", ["openai", "deepseek", "qwen", "ollama"])
 def test_streamed_run_records_metered_usage_for_each_provider(provider, fake_openai) -> None:
     ledger = UsageLedger()
     model = make_chat_model(f"{provider}:some-model", KEYS, **fake_openai.clients())
@@ -244,3 +245,23 @@ def test_invalid_structured_output_yields_repair_messages(fake_openai) -> None:
         "proposal 1: restart_deployment cannot target 'ehr-db': it is a database, "
         "not an application"
     ]
+
+
+def test_ollama_model_ids_keep_their_own_colons(fake_openai) -> None:
+    model = make_chat_model("ollama:nemotron-3-nano:30b-cloud", {}, **fake_openai.clients())
+    model.invoke("hi")
+    assert fake_openai.requests[0]["body"]["model"] == "nemotron-3-nano:30b-cloud"
+
+
+def test_ollama_uses_non_strict_json_schema(fake_openai) -> None:
+    fake_openai.structured = _valid_findings()
+    spec = "ollama:some-model:cloud"
+    model = make_chat_model(spec, {}, **fake_openai.clients())
+
+    output = structured_findings(model, spec).invoke("Investigate INC-1042")
+
+    response_format = fake_openai.requests[0]["body"]["response_format"]
+    assert response_format["type"] == "json_schema"
+    assert response_format["json_schema"].get("strict") in (None, False)
+    _findings, errors = parse_findings(output, load_catalogue(SIM / "services.yaml"))
+    assert errors == []

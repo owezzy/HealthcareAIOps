@@ -3,7 +3,8 @@
 All three are reached through one OpenAI-compatible client (LangChain
 `ChatOpenAI`), so a model is configuration, not code:
 
-    AIOPS_LLM_MODEL=<provider>:<model id>      e.g. openai:<model>, deepseek:<model>, qwen:<model>
+    AIOPS_LLM_MODEL=<provider>:<model id>      e.g. openai:<model>, qwen:<model>, ollama:<model>
+                                               (Ollama: local daemon; cloud models need credits)
     AIOPS_LLM_MODEL=fake:echo                  local development and tests (default)
 
 Every client streams with `stream_usage=True`: runs stream over AG-UI, and a
@@ -37,13 +38,16 @@ StructuredMethod = Literal["json_schema", "function_calling"]
 class Provider:
     name: str
     base_url: str | None  # None: the client library's default (OpenAI)
-    api_key_env: str
-    #: json_schema (strict) where the provider guarantees it; tool calling otherwise.
+    #: None: the provider needs no key (a local Ollama daemon).
+    api_key_env: str | None
+    #: json_schema where the provider supports it; tool calling otherwise.
     structured_method: StructuredMethod
+    #: Ask the provider to enforce the schema exactly (only where it is documented to).
+    strict: bool = False
 
 
 PROVIDERS: dict[str, Provider] = {
-    "openai": Provider("openai", None, "OPENAI_API_KEY", "json_schema"),
+    "openai": Provider("openai", None, "OPENAI_API_KEY", "json_schema", strict=True),
     "deepseek": Provider(
         "deepseek", "https://api.deepseek.com", "DEEPSEEK_API_KEY", "function_calling"
     ),
@@ -53,6 +57,9 @@ PROVIDERS: dict[str, Provider] = {
         "DASHSCOPE_API_KEY",
         "function_calling",
     ),
+    # Ollama's OpenAI-compatible API on the local daemon. Cloud models
+    # (`*:cloud`) are proxied by the daemon and billed as Ollama credits.
+    "ollama": Provider("ollama", "http://localhost:11434/v1", None, "json_schema"),
 }
 
 
@@ -90,9 +97,12 @@ def make_chat_model(
     if parsed.provider == "fake":
         return FakeEchoChatModel()
     provider = PROVIDERS[parsed.provider]
-    api_key = env.get(provider.api_key_env)
-    if not api_key:
-        raise ModelConfigError(f"{provider.api_key_env} is not set for {spec!r}")
+    if provider.api_key_env is None:
+        api_key = "not-needed"  # the client library insists on a value
+    else:
+        api_key = env.get(provider.api_key_env, "")
+        if not api_key:
+            raise ModelConfigError(f"{provider.api_key_env} is not set for {spec!r}")
     return ChatOpenAI(
         model=parsed.model,
         api_key=api_key,
@@ -116,14 +126,15 @@ def structured_findings(model: BaseChatModel, spec: str) -> Runnable:
     Validate the result with `aiops_contracts.findings.parse_findings`:
     provider-side enforcement is a convenience, the contract is the authority.
     """
-    provider = ModelSpec.parse(spec).provider
-    method = PROVIDERS[provider].structured_method if provider in PROVIDERS else "json_schema"
+    provider = PROVIDERS.get(ModelSpec.parse(spec).provider)
+    method = provider.structured_method if provider else "json_schema"
+    strict = provider.strict if provider else False
     schema = {
         "title": "Findings",
         "description": "Typed findings for one incident investigation.",
         **strict_json_schema(Findings),
     }
-    return model.with_structured_output(schema, method=method, strict=method == "json_schema")
+    return model.with_structured_output(schema, method=method, strict=strict)
 
 
 class FakeEchoChatModel(BaseChatModel):

@@ -17,8 +17,8 @@ Every service reads its configuration from environment variables at start-up.
 | `AIOPS_API_URL` | *(unset)* | API base URL. LLM usage records are posted to `<url>/internal/usage` |
 | `AIOPS_INTERNAL_TOKEN` | *(unset)* | Must match the API's token. If this or `AIOPS_API_URL` is unset, usage is kept in memory only and a warning is logged |
 | `AIOPS_MODEL_PRICES` | `config/model-prices.yaml` | Price table for LLM cost. A missing file or unpriced model records cost as unknown |
-| `AIOPS_LLM_MODEL` | `fake:echo` | `<provider>:<model id>`. Providers: `openai`, `deepseek`, `qwen`, and `fake` (keyless, local). An unknown provider or missing key stops the agent at start-up |
-| `AIOPS_LLM_BASE_URL` | provider default | Overrides the provider endpoint, for example another DashScope region |
+| `AIOPS_LLM_MODEL` | `fake:echo` | `<provider>:<model id>`. Providers: `openai`, `deepseek`, `qwen`, `ollama` and `fake` (keyless, local). Ollama model IDs keep their own colons, e.g. `ollama:<name>:cloud`. An unknown provider or missing key stops the agent at start-up |
+| `AIOPS_LLM_BASE_URL` | provider default | Overrides the provider endpoint: another DashScope region, or an Ollama daemon other than `http://localhost:11434/v1` (needed in the cluster) |
 | `OPENAI_API_KEY` | *(unset)* | Required for `openai:*` |
 | `DEEPSEEK_API_KEY` | *(unset)* | Required for `deepseek:*` (endpoint `https://api.deepseek.com`) |
 | `DASHSCOPE_API_KEY` | *(unset)* | Required for `qwen:*` (endpoint `https://dashscope-intl.aliyuncs.com/compatible-mode/v1`) |
