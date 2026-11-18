@@ -9,7 +9,7 @@ from typing import Self
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from aiops_contracts.vocabulary import ClinicalTier, ComponentKind
+from aiops_contracts.vocabulary import CatalogueAction, ClinicalTier, ComponentKind
 
 
 class _Contract(BaseModel):
@@ -83,6 +83,30 @@ class Catalogue(_Contract):
                     affected.add(c.id)
                     frontier.append(c.id)
         return affected
+
+    def action_errors(
+        self, action: CatalogueAction, target: str, replicas: int | None
+    ) -> list[str]:
+        """Why an executor action on this target is invalid (empty means valid).
+
+        Catalogue actions operate on application deployments only (plan §6.5);
+        scaling must stay inside the component's declared range.
+        """
+        component = self.get(target)
+        if component is None:
+            return [f"unknown component {target!r}"]
+        if component.kind is not ComponentKind.APPLICATION:
+            kind = component.kind
+            return [f"{action} cannot target {target!r}: it is a {kind}, not an application"]
+        if action is not CatalogueAction.SCALE_DEPLOYMENT:
+            return [] if replicas is None else [f"{action} on {target!r} takes no replicas"]
+        if component.scaling is None:
+            return [f"{target!r} has no scaling range in the catalogue"]
+        if replicas is None:
+            return [f"scale_deployment on {target!r} needs replicas"]
+        if not component.scaling.min <= replicas <= component.scaling.max:
+            return [f"replicas {replicas} outside {target!r} scaling range"]
+        return []
 
 
 def _reject_cycles(by_id: dict[str, Component]) -> None:

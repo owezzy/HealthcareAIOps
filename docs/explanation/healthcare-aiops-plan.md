@@ -205,49 +205,24 @@ flowchart TD
 
 ### 6.3 Typed findings
 
-The agent's final output is a Pydantic model, never free text. The UI renders it, and the eval scores it deterministically where possible.
+The agent's final output is `Findings` (`packages/contracts/src/aiops_contracts/findings.py`), never free text. The console renders it (`apps/web/src/app/shared/models/findings.contract.ts` maps the wire format to view models) and the evals score it deterministically where possible.
 
-```python
-class Evidence(BaseModel):
-    id: str                       # stable ID stored in DB, e.g. "ev_01H..."
-    source: Literal["metric", "log", "alert", "deploy", "k8s_event", "runbook", "topology", "incident"]
-    ref: str                      # query or document reference that reproduces it
-    observed_at: datetime
-    summary: str
+| Model | Key fields |
+|---|---|
+| `Evidence` | `id` (`ev_…`), `source` (metric, log, alert, deploy, k8s_event, config_diff, runbook, topology, incident), `ref` (reproducible query), `observed_at` (time-zone aware), `summary` |
+| `Fact` | `statement`, `evidence_ids` (at least one). No confidence: facts are observed, not inferred |
+| `Hypothesis` | `component`, `category` (root-cause enum), `statement`, `confidence`, `supporting_evidence`, `contradicting_evidence` |
+| `ActionProposal` | `action` (catalogue enum), `target`, `replicas` (scale only), `rationale`, `risk`, `expected_outcome`, `rollback`, `follow_up`, `evidence_ids` |
+| `Findings` | `incident_id`, `summary`, `evidence`, `confirmed_facts`, `hypotheses` (ranked), `root_cause` (one of the hypotheses, or null), `clinical_impact`, `missing_information`, `suspected_injection`, `proposals`, `escalation` |
 
-class Hypothesis(BaseModel):
-    component: str                # must be a known service/node ID
-    category: RootCauseCategory   # enum: bad_config_change, resource_exhaustion, capacity, certificate,
-                                  #       infrastructure_fault, dependency_degradation, unknown
-    statement: str
-    confidence: Literal["low", "medium", "high"]
-    supporting_evidence: list[str]      # Evidence IDs
-    contradicting_evidence: list[str]
+Validation, with plain messages the agent gets back for its one repair attempt (`parse_findings`):
 
-class ActionProposal(BaseModel):
-    action: CatalogueAction       # enum from the action catalogue only
-    target: str
-    params: dict[str, int | str]
-    rationale: str
-    risk: Literal["low", "medium", "high"]
-    expected_outcome: str
-    rollback: str | None
-    evidence_ids: list[str]
+- Every cited evidence ID exists in the findings' own `evidence`; no duplicates.
+- `root_cause`, when set, is one of the `hypotheses`.
+- **No proposal may cite evidence listed in `suspected_injection`.** Injected text can be reported, never acted on.
+- Against the catalogue (`findings_errors`): hypothesis components exist; proposals target applications only; `scale_deployment` stays inside the component's scaling range; other actions take no replicas.
 
-class Findings(BaseModel):
-    incident_id: str
-    summary: str
-    confirmed_facts: list[Fact]          # each Fact has evidence_ids (non-empty)
-    hypotheses: list[Hypothesis]         # ranked
-    root_cause: Hypothesis | None        # None means "not established"
-    clinical_impact: str                 # derived from tier + departments, not invented
-    missing_information: list[str]
-    suspected_injection: list[str]       # evidence IDs containing instruction-like content
-    proposals: list[ActionProposal]
-    escalation: str | None               # who to involve when no catalogue action fits
-```
-
-A validator rejects findings that cite unknown evidence IDs or components. The agent gets one repair attempt.
+`ActionProposal` uses an explicit `replicas` field rather than an open `params` map, and every object is closed (`additionalProperties: false`), so the schema works with providers' strict structured-output modes.
 
 ### 6.4 MCP tool catalogue
 

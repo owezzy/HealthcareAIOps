@@ -21,10 +21,7 @@ import { StatusPillComponent } from 'app/shared/ui/triage/status-pill.component'
 import { TierBadgeComponent } from 'app/shared/ui/triage/tier-badge.component';
 import {
     SAMPLE_APPROVAL_HASH,
-    SAMPLE_FACTS,
-    SAMPLE_HYPOTHESES,
-    SAMPLE_INJECTION,
-    SAMPLE_PROPOSAL,
+    SAMPLE_FINDINGS,
 } from './component-sheet.fixtures';
 
 /**
@@ -89,10 +86,11 @@ import {
 export class ComponentSheetPage {
     protected readonly session = inject(SessionStore);
 
-    protected readonly facts = SAMPLE_FACTS;
-    protected readonly hypotheses = SAMPLE_HYPOTHESES;
-    protected readonly injection = SAMPLE_INJECTION;
-    protected readonly proposal = SAMPLE_PROPOSAL;
+    protected readonly facts = SAMPLE_FINDINGS.facts;
+    protected readonly hypotheses = SAMPLE_FINDINGS.hypotheses;
+    protected readonly injection = SAMPLE_FINDINGS.injections[0];
+    protected readonly proposal = SAMPLE_FINDINGS.proposals[0];
+    protected readonly missingInformation = SAMPLE_FINDINGS.missingInformation;
     protected readonly approvalHash = SAMPLE_APPROVAL_HASH;
 
     // Expiry is relative to page load so the countdowns are live.

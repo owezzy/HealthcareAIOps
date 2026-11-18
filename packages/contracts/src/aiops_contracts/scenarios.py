@@ -148,21 +148,15 @@ class Scenario(_Contract):
         for ref in (*self.response.acceptable_actions, *self.response.forbidden_actions):
             known(ref.target, f"response action {ref.action}")
         for ref in self.response.acceptable_actions:
-            errors.extend(self._check_scaling(ref, catalogue))
+            replicas = ref.params.get("replicas")
+            if replicas is not None and not isinstance(replicas, int):
+                errors.append(f"{self.id}: {ref.action} on {ref.target!r} needs integer replicas")
+                continue
+            errors.extend(
+                f"{self.id}: {problem}"
+                for problem in catalogue.action_errors(ref.action, ref.target, replicas)
+            )
         return errors
-
-    def _check_scaling(self, ref: ActionRef, catalogue: Catalogue) -> list[str]:
-        if ref.action is not CatalogueAction.SCALE_DEPLOYMENT:
-            return []
-        component = catalogue.get(ref.target)
-        replicas = ref.params.get("replicas")
-        if component is None or component.scaling is None:
-            return [f"{self.id}: {ref.target!r} has no scaling range in the catalogue"]
-        if not isinstance(replicas, int):
-            return [f"{self.id}: scale_deployment on {ref.target!r} needs integer params.replicas"]
-        if not component.scaling.min <= replicas <= component.scaling.max:
-            return [f"{self.id}: replicas {replicas} outside {ref.target!r} scaling range"]
-        return []
 
 
 def load_scenarios(directory: Path) -> list[Scenario]:

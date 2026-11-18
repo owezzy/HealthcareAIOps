@@ -96,3 +96,29 @@ class VariantKind(StrEnum):
     PROMPT_INJECTION = "prompt_injection"
     POISONED_RETRIEVAL = "poisoned_retrieval"
     PERMISSION_DENIED = "permission_denied"
+
+
+class EvidenceSource(StrEnum):
+    """Where a piece of evidence came from (plan §6.3)."""
+
+    METRIC = "metric"
+    LOG = "log"
+    ALERT = "alert"
+    DEPLOY = "deploy"
+    K8S_EVENT = "k8s_event"
+    CONFIG_DIFF = "config_diff"
+    RUNBOOK = "runbook"
+    TOPOLOGY = "topology"
+    INCIDENT = "incident"
+
+
+class Confidence(StrEnum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
+
+class Risk(StrEnum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
