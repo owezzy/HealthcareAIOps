@@ -38,6 +38,7 @@ spec:
           envFrom: [{ secretRef: { name: aiops-secrets } }]
           env:
             - { name: AIOPS_DAILY_LLM_BUDGET_USD, value: "5" }
+            - { name: AIOPS_DAILY_LLM_CALL_CAP, value: "300" }
           readinessProbe:
             httpGet: { path: /ready, port: http }
             periodSeconds: 10

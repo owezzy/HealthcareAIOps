@@ -5,8 +5,9 @@ The Copilot runtime (services/copilot-runtime) proxies browser traffic here;
 browsers never call this service directly (ADR-0004).
 
 Env:
-  AIOPS_API_URL         API base URL; LLM usage is posted there (ADR-0008).
-                        Unset: usage is kept in memory only, with a warning.
+  AIOPS_API_URL         API base URL; LLM usage is posted there and the daily
+                        budget is read from it before every run (ADR-0008).
+                        Unset: usage stays in memory and the budget is not enforced.
   AIOPS_INTERNAL_TOKEN  service token for the API's /internal endpoints.
   AIOPS_MODEL_PRICES    price table path (default config/model-prices.yaml).
   AIOPS_LLM_MODEL       <provider>:<model id>; default fake:echo (see aiops_agent.llm).
@@ -16,10 +17,11 @@ import logging
 import os
 from pathlib import Path
 
-from ag_ui_langgraph import LangGraphAgent, add_langgraph_fastapi_endpoint
+from ag_ui_langgraph import add_langgraph_fastapi_endpoint
 from fastapi import FastAPI
 from langchain_core.language_models import BaseChatModel
 
+from aiops_agent.budget import BudgetGate, BudgetGatedAgent
 from aiops_agent.llm import model_from_env
 from aiops_agent.spike_graph import build_spike_graph
 from aiops_agent.usage import ApiUsageSink, UsageLedger, UsageRecorder, UsageSink
@@ -35,10 +37,12 @@ def create_app(
     sink: UsageSink | None = None,
     prices: PriceTable | None = None,
     model: BaseChatModel | None = None,
+    budget_gate: BudgetGate | None = None,
 ) -> FastAPI:
     sink = sink or _usage_sink()
     prices = prices or _load_prices()
     model = model or model_from_env()
+    budget_gate = budget_gate or _budget_gate()
     app = FastAPI(title="Healthcare AIOps Agent", version="0.1.0")
 
     @app.get("/health", tags=["platform"])
@@ -47,7 +51,8 @@ def create_app(
 
     add_langgraph_fastapi_endpoint(
         app=app,
-        agent=LangGraphAgent(
+        agent=BudgetGatedAgent(
+            budget_gate=budget_gate,
             name=AGENT_NAME,
             description="ADR-0004 spike agent: one streamed model call.",
             graph=build_spike_graph(model),
@@ -66,6 +71,14 @@ def _usage_sink() -> UsageSink:
         return ApiUsageSink(api_url, token)
     log.warning("AIOPS_API_URL/AIOPS_INTERNAL_TOKEN not set: LLM usage is kept in memory only")
     return UsageLedger()
+
+
+def _budget_gate() -> BudgetGate | None:
+    api_url = os.environ.get("AIOPS_API_URL")
+    if api_url:
+        return BudgetGate(api_url)
+    log.warning("AIOPS_API_URL not set: the daily LLM budget is not enforced")
+    return None
 
 
 def _load_prices() -> PriceTable:

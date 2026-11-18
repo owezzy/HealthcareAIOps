@@ -57,4 +57,9 @@ def get_budget_today(
     settings: Annotated[Settings, Depends(_settings)],
 ) -> BudgetStatus:
     """Today's (UTC) LLM spend against the cap, for the console's budget meter."""
-    return use_cases.daily_budget(repo, datetime.now(UTC).date(), settings.daily_llm_budget_usd)
+    return use_cases.daily_budget(
+        repo,
+        datetime.now(UTC).date(),
+        settings.daily_llm_budget_usd,
+        settings.daily_llm_call_cap,
+    )

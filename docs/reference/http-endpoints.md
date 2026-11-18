@@ -32,8 +32,10 @@ Paths as each service serves them. In production only the web origin is public; 
 |---|---|---|
 | `day` | date | UTC |
 | `cap_usd` | number | `AIOPS_DAILY_LLM_BUDGET_USD` |
+| `call_cap` | integer | `AIOPS_DAILY_LLM_CALL_CAP` |
 | `spent_usd` | number or null | Null when any call today was unpriced or unmetered |
-| `state` | `ok`, `warn`, `exhausted`, `unknown` | `exhausted` switches the console to Replay mode |
+| `state` | `ok`, `warn`, `exhausted`, `unknown` | `exhausted`: spend or calls reached a cap; the agent refuses runs and the console shows Replay mode. `warn`: either at 80% or more. `unknown`: spend unknown and no cap near |
+| `exhausted_by` | `spend`, `calls` or null | Which cap was reached |
 | `calls`, `unmetered_calls` | integer | |
 
 The full schema is also served by FastAPI at `GET /docs` and `GET /openapi.json` on the API port.
@@ -43,7 +45,7 @@ The full schema is also served by FastAPI at `GET /docs` and `GET /openapi.json`
 | Method and path | Response |
 |---|---|
 | `GET /health` | `{"status": "ok"}` |
-| `POST /agent` | AG-UI run: a Server-Sent Events stream (`RUN_STARTED` … `RUN_FINISHED`). Called by the runtime only |
+| `POST /agent` | AG-UI run: a Server-Sent Events stream (`RUN_STARTED` … `RUN_FINISHED`). Called by the runtime only. If the budget is exhausted or cannot be read, the stream is `RUN_STARTED` then `RUN_ERROR` with `code` `budget_exhausted` or `budget_unavailable`, and no model is called |
 
 ## Copilot runtime (port 4000)
 

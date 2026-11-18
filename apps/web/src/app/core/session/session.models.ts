@@ -42,6 +42,9 @@ export interface LlmBudget {
     /** null when spend is unknown (unpriced model or a call that reported no usage). */
     spentUsd: number | null;
     capUsd: number;
+    /** Model calls today, and the daily call cap that bounds unknown spend. */
+    calls: number;
+    callCap: number;
     state: BudgetState;
 }
 
@@ -49,8 +52,10 @@ export interface LlmBudget {
 export interface BudgetStatusResponse {
     day: string;
     cap_usd: number;
+    call_cap: number;
     spent_usd: number | null;
     state: BudgetState;
+    exhausted_by: 'spend' | 'calls' | null;
     calls: number;
     unmetered_calls: number;
 }

@@ -9,12 +9,13 @@ Every service reads its configuration from environment variables at start-up.
 | `AIOPS_DATABASE_URL` | `postgresql+psycopg://aiops:aiops@localhost:5432/aiops` | SQLAlchemy URL of the API database. Also used by `make migrate` |
 | `AIOPS_INTERNAL_TOKEN` | *(unset)* | Service token for `/internal/*`. **Unset means every internal call is refused** (fail closed) |
 | `AIOPS_DAILY_LLM_BUDGET_USD` | `5.0` | Daily LLM spend cap. Must be positive. `exhausted` at or above it, `warn` from 80% |
+| `AIOPS_DAILY_LLM_CALL_CAP` | `300` | Daily cap on model calls. Must be positive. Bounds models whose cost is unknown; `exhausted` at or above it, `warn` from 80% |
 
 ## Agent (`services/agent`)
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `AIOPS_API_URL` | *(unset)* | API base URL. LLM usage records are posted to `<url>/internal/usage` |
+| `AIOPS_API_URL` | *(unset)* | API base URL. LLM usage records are posted to `<url>/internal/usage`, and `<url>/api/budget/today` is checked before every run. Unset: usage stays in memory and the budget is **not enforced** |
 | `AIOPS_INTERNAL_TOKEN` | *(unset)* | Must match the API's token. If this or `AIOPS_API_URL` is unset, usage is kept in memory only and a warning is logged |
 | `AIOPS_MODEL_PRICES` | `config/model-prices.yaml` | Price table for LLM cost. A missing file or unpriced model records cost as unknown |
 | `AIOPS_LLM_MODEL` | `fake:echo` | `<provider>:<model id>`. Providers: `openai`, `deepseek`, `qwen`, `ollama` and `fake` (keyless, local). Ollama model IDs keep their own colons, e.g. `ollama:<name>:cloud`. An unknown provider or missing key stops the agent at start-up |

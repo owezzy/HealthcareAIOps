@@ -9,6 +9,6 @@ def record_usage(repo: UsageRepository, usage: LlmUsage) -> bool:
     return repo.add(usage)
 
 
-def daily_budget(repo: UsageRepository, day: date, cap_usd: float) -> BudgetStatus:
-    """Spend against the daily cap; 'exhausted' puts the console into Replay mode."""
-    return budget_status(summarize(repo.for_day(day), day), cap_usd)
+def daily_budget(repo: UsageRepository, day: date, cap_usd: float, call_cap: int) -> BudgetStatus:
+    """Spend and calls against the daily caps; 'exhausted' pauses the agent (Replay mode)."""
+    return budget_status(summarize(repo.for_day(day), day), cap_usd, call_cap)

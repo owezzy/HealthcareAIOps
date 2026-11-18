@@ -48,7 +48,13 @@ const BUDGET_POLL_MS = 30_000;
 const initialState: SessionState = {
     role: 'approver',
     theme: 'dark',
-    budget: { spentUsd: null, capUsd: 5, state: 'unknown' },
+    budget: {
+        spentUsd: null,
+        capUsd: 5,
+        calls: 0,
+        callCap: 300,
+        state: 'unknown',
+    },
     agentStatus: 'unknown',
 };
 
@@ -56,11 +62,13 @@ export const SessionStore = signalStore(
     { providedIn: 'root' },
     withState(initialState),
     withComputed(({ role, budget }) => ({
+        /** How close the nearer limit is: spend against its cap, or calls against theirs. */
         budgetRatio: computed(() => {
-            const { spentUsd, capUsd } = budget();
-            return spentUsd === null || capUsd <= 0
-                ? 0
-                : Math.min(spentUsd / capUsd, 1);
+            const { spentUsd, capUsd, calls, callCap } = budget();
+            const spend =
+                spentUsd === null || capUsd <= 0 ? 0 : spentUsd / capUsd;
+            const callShare = callCap <= 0 ? 0 : calls / callCap;
+            return Math.min(Math.max(spend, callShare), 1);
         }),
         /** Budget exhausted: agent tools stop, recorded runs are shown (§6). */
         replayMode: computed(() => budget().state === 'exhausted'),
@@ -88,6 +96,8 @@ export const SessionStore = signalStore(
                             (status): LlmBudget => ({
                                 spentUsd: status.spent_usd,
                                 capUsd: status.cap_usd,
+                                calls: status.calls,
+                                callCap: status.call_cap,
                                 state: status.state,
                             })
                         ),

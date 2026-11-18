@@ -12,8 +12,13 @@ TOKEN = "svc-token"
 AUTH = {"Authorization": f"Bearer {TOKEN}"}
 
 
-def _settings(token: str | None = TOKEN, cap: float = 1.0) -> Settings:
-    return Settings(database_url="unused", internal_token=token, daily_llm_budget_usd=cap)
+def _settings(token: str | None = TOKEN, cap: float = 1.0, call_cap: int = 300) -> Settings:
+    return Settings(
+        database_url="unused",
+        internal_token=token,
+        daily_llm_budget_usd=cap,
+        daily_llm_call_cap=call_cap,
+    )
 
 
 def _usage(call_id: str, cost: float | None = 0.1, metered: bool = True) -> dict:
@@ -83,3 +88,21 @@ def test_unmetered_call_makes_spend_unknown(client) -> None:
 
     body = client.get("/api/budget/today").json()
     assert (body["state"], body["spent_usd"], body["unmetered_calls"]) == ("unknown", None, 1)
+
+
+@pytest.mark.parametrize(
+    ("costs", "state", "exhausted_by"),
+    [
+        ([None, None, None, None, None], "exhausted", "calls"),  # unknown cost, cap reached
+        ([None, None, None, None], "warn", None),  # 80% of the call cap
+        ([None, None], "unknown", None),
+        ([0.6, 0.6, 0.0, 0.0, 0.0], "exhausted", "spend"),  # spend wins when both apply
+    ],
+)
+def test_call_cap_bounds_unknown_spend(usage_repo, costs, state, exhausted_by) -> None:
+    client = TestClient(create_app(_settings(cap=1.0, call_cap=5), usage_repo))
+    for i, cost in enumerate(costs):
+        client.post("/internal/usage", json=_usage(f"c{i}", cost), headers=AUTH)
+
+    body = client.get("/api/budget/today").json()
+    assert (body["state"], body["exhausted_by"], body["call_cap"]) == (state, exhausted_by, 5)

@@ -80,6 +80,8 @@
             <app-budget-meter
                 [spentUsd]="session.budget().spentUsd"
                 [capUsd]="session.budget().capUsd"
+                [calls]="session.budget().calls"
+                [callCap]="session.budget().callCap"
                 [ratio]="session.budgetRatio()"
                 [state]="session.budget().state"
             />

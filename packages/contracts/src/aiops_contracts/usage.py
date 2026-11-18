@@ -103,12 +103,20 @@ BudgetState = Literal["ok", "warn", "exhausted", "unknown"]
 
 
 class BudgetStatus(_Contract):
-    """What the console's budget meter shows. Exhausted means Replay mode (design spec §6)."""
+    """Today's budget, as the console shows it and the agent obeys it.
+
+    `exhausted` means Replay mode in the console (design spec §6) and refused
+    runs in the agent. It is reached by spend (`cap_usd`) or by the number of
+    calls (`call_cap`); the call cap is what limits models whose cost is
+    unknown (unpriced or unmetered), so "unknown" never means "unlimited".
+    """
 
     day: date
     cap_usd: float
+    call_cap: int
     spent_usd: float | None
     state: BudgetState
+    exhausted_by: Literal["spend", "calls"] | None
     calls: int
     unmetered_calls: int
 
@@ -130,21 +138,33 @@ def summarize(records: Iterable[LlmUsage], day: date) -> UsageSummary:
     )
 
 
-def budget_status(summary: UsageSummary, cap_usd: float) -> BudgetStatus:
+def budget_status(summary: UsageSummary, cap_usd: float, call_cap: int) -> BudgetStatus:
     spent = summary.cost_usd
-    if spent is None:
-        state: BudgetState = "unknown"
-    elif spent >= cap_usd:
+    exhausted_by: Literal["spend", "calls"] | None = None
+    if spent is not None and spent >= cap_usd:
+        exhausted_by = "spend"
+    elif summary.calls >= call_cap:
+        exhausted_by = "calls"
+
+    near_spend_cap = spent is not None and spent >= cap_usd * BUDGET_WARN_RATIO
+    near_call_cap = summary.calls >= call_cap * BUDGET_WARN_RATIO
+
+    state: BudgetState
+    if exhausted_by is not None:
         state = "exhausted"
-    elif spent >= cap_usd * BUDGET_WARN_RATIO:
-        state = "warn"
+    elif near_spend_cap or near_call_cap:
+        state = "warn"  # before "unknown": nearing a cap matters more than an unknown price
+    elif spent is None:
+        state = "unknown"
     else:
         state = "ok"
     return BudgetStatus(
         day=summary.day,
         cap_usd=cap_usd,
+        call_cap=call_cap,
         spent_usd=spent,
         state=state,
+        exhausted_by=exhausted_by,
         calls=summary.calls,
         unmetered_calls=summary.unmetered_calls,
     )
