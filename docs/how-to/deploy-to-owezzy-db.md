@@ -57,17 +57,31 @@ kubectl -n aiops-app create secret generic aiops-llm \
 kubectl -n aiops-app rollout restart deployment/agent
 ```
 
-## 3. Create the Cloudflare tunnel
+## 3. Connect the Cloudflare tunnel
 
-1. In Cloudflare Zero Trust, create a tunnel named `healthcare-aiops` (connector type: cloudflared). Copy its token.
-2. Add a public hostname: `aiops.owenadirah.com` → service `http://web.aiops-app.svc.cluster.local:8080`.
-3. Store the token on the cluster:
+The tunnel `healthcare-aiops` and the DNS record `aiops.owenadirah.com` were created with the CLI (2026-11-18); the commands are below for reference. It is a locally-managed tunnel, so its routing lives in `deploy/base/cloudflared.yaml` (ConfigMap `cloudflared-config`), not in the Cloudflare dashboard.
 
 ```bash
-kubectl -n aiops-app create secret generic cloudflared-token --from-literal=token='<tunnel token>'
+# One-off, already done. Run cloudflared login in a normal terminal, outside Claude Code.
+cloudflared tunnel login                                    # authorise the owenadirah.com zone
+cloudflared tunnel create healthcare-aiops
+cloudflared tunnel route dns healthcare-aiops aiops.owenadirah.com
+```
+
+Give the cluster the tunnel's credentials. Run this on the Mac that holds `~/.cloudflared/cert.pem`; the token goes straight into the secret and is never displayed:
+
+```bash
+cloudflared tunnel token healthcare-aiops \
+  | ssh owezzy-db 'kubectl -n aiops-app create secret generic cloudflared-token --from-file=token=/dev/stdin'
 ```
 
 Only the web service is published. Its nginx routes `/api/copilotkit` to the runtime and `/api` to the API. The API's `/internal/*` routes are not reachable from outside.
+
+To change routing, edit the ConfigMap and check it first:
+
+```bash
+cloudflared tunnel --config <extracted config.yaml> ingress validate
+```
 
 ## 4. Let the cluster read the code and images
 
@@ -104,5 +118,6 @@ Then open `https://aiops.owenadirah.com/spike/assistant` and send a message.
 |---|---|---|
 | `api` stuck in `Init` | Migration cannot reach the database | `kubectl -n aiops-app logs deploy/api -c migrate`; check `AIOPS_DATABASE_URL` |
 | `ImagePullBackOff` | Images private or tag not built | Step 4; the Images workflow run for the tag |
-| Tunnel shows "inactive" | Token secret wrong or missing | `kubectl -n aiops-app logs deploy/cloudflared` |
+| Tunnel has no connections (`cloudflared tunnel list`) | Token secret wrong or missing | `kubectl -n aiops-app logs deploy/cloudflared` |
+| `aiops.owenadirah.com` returns 404 | Request did not match the ingress rule | Hostname in `cloudflared-config` |
 | Budget meter reads "unknown" | API not ready, or an unpriced model was used | `kubectl -n aiops-app get pods`; `config/model-prices.yaml` |

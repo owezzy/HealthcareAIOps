@@ -18,7 +18,7 @@
 ## Decision
 1. Deploy the app tier (web, copilot-runtime, agent, API) to `owezzy-db` in namespace `aiops-app`, following the existing conventions:
    - **Flux** watches this repository and applies `deploy/overlays/demo` from release tags (git flow: `release/*` → tag on `main` → Flux). This settles ADR-0009.
-   - **Cloudflare Tunnel** (a `cloudflared` Deployment with a tunnel token) publishes `aiops.owenadirah.com`. TLS terminates at Cloudflare; no inbound ports open.
+   - **Cloudflare Tunnel** `healthcare-aiops` (locally managed, created with the `cloudflared` CLI; routing in the `cloudflared-config` ConfigMap) publishes `aiops.owenadirah.com`. TLS terminates at Cloudflare; no inbound ports open.
    - The web pod's nginx routes `/api/copilotkit` to the runtime and `/api` to the API, so the tunnel needs one hostname rule.
    - **Database:** the cluster's shared Postgres (`postgres` namespace, `pgvector/pgvector:0.8.1-pg18`, retained 5 GiB volume, already used by SchoolCRM and GG-Garage) with a dedicated `aiops` database and role. Alembic owns the schema.
    - **Why the tunnel and not an ingress controller:** Traefik is disabled on this node, and port 80 serves certbot's standalone renewals for `db.owenadirah.com`. An ingress controller would need 80/443 opened, cert-manager, and would conflict with those renewals. The tunnel opens no inbound ports and matches the other apps.
