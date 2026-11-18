@@ -61,8 +61,8 @@ It also re-checks host memory. If anything fails, the canary taint stays and not
 
 ```bash
 sudo docker stop aiops-node-2
-kubectl get node node-2 -w      # NotReady after about 40 s
-sudo docker start aiops-node-2  # Ready again within a minute
+kubectl get node node-2 -w      # NotReady after about 50 s (measured: 49 s)
+sudo docker start aiops-node-2  # Ready again within seconds (measured: 5 s)
 ```
 
 The fault injector (week 2) does the same from inside the cluster with `SIGSTOP` and `SIGCONT`, as described in ADR-0013.

@@ -1,6 +1,6 @@
 # 0013: Simulate node-2 as a K3s node in a Docker container
 
-- **Status:** Accepted (files and scripts ready; not yet applied to the server)
+- **Status:** Accepted, applied to owezzy-db on 2026-11-18
 - **Date:** 2026-11-18
 - **Supersedes:** point 3 of ADR-0012 (a second VPS for the estate)
 
@@ -32,6 +32,14 @@ Evidence: read-only checks on `owezzy-db`, K3s documentation, k3d's cgroup v2 en
 | Networking between host and container | Modules `overlay`, `br_netfilter`, `vxlan` loaded; forwarding on; flannel VXLAN; the API certificate covers `161.97.181.164` | Two ufw rules scoped to `172.31.250.0/24`; `verify.sh` proves cross-node DNS through VXLAN |
 
 Residual risk: the agent-beside-native-server combination is not documented by K3s or k3d, so it is proven only by `verify.sh` on the real host. The canary flow makes a failed attempt cost nothing but a rollback.
+
+## Applied (2026-11-18)
+- `preflight.sh`: 12 of 12 checks passed, 4,433 MiB available.
+- node-2 `Ready` 20 s after `docker compose up`, with no cgroup or node-password errors.
+- `verify.sh`: all checks passed, including cross-node DNS through VXLAN. Promoted; only the estate-only taint remains.
+- Footprint at idle: 104 MiB of the 512 MiB cap, about 4% of one CPU, 33 PIDs. Host available memory stayed above 4 GiB.
+- S5 rehearsal: `docker stop` made node-2 `NotReady` after 49 s; `docker start` made it `Ready` after 5 s. Kubernetes' automatic `unreachable` taint cleared by itself, and the canary taint did not return (taints apply only at first registration).
+- No production pod was disturbed at any point. `rollback.sh` has not been exercised.
 
 ## Consequences
 - S5 is a real node failure, not a cordon-and-drain imitation, at no extra cost.
