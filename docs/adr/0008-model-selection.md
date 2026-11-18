@@ -41,6 +41,8 @@ Model swaps are config changes; prompt changes are re-evaluated on all three.
 ## Local development model: NVIDIA Nemotron 3 Nano 4B via Ollama (2026-11-18)
 - `make dev` uses `ollama:nemotron-3-nano:4b` (2.9 GB, local, free; supports tool calling). The 30B variant needs 18–24 GB and does not fit the 16 GB development Mac; the `:cloud` variant was retired and Ollama cloud needs credits.
 - Verified with a real call through the AG-UI agent: the stream arrived in 20 deltas and **usage was reported** (`metered`, 29 input / 89 output tokens, thread recorded). Priced at zero in `config/model-prices.yaml`.
-- Structured Findings (`json_schema`, not strict): the output matched the schema shape, but failed the contract rule "root_cause must be one of the hypotheses" on the first attempt, in 39 s. The repair loop must handle this, and the rule's design is under review (task filed).
+- Structured Findings (`json_schema`, not strict): the first run failed "root_cause must be one of the hypotheses" because the model repeated the hypothesis imperfectly. The contract now uses `root_cause_rank`, a 1-based reference (task z3x.6).
+- **Temperature 0 makes this reasoning model loop:** raw requests at `temperature: 0` ran past 240 s twice; with the model's own sampling they finished in 28–40 s. Ollama now omits temperature, and uses no client retries, because Ollama keeps generating for an abandoned request and handles one at a time, so retries queued behind it. Hosted providers keep temperature 0 and two retries; the timeout is per provider (`AIOPS_LLM_TIMEOUT_SECONDS` overrides).
+- After both fixes, through the project code path: 3 runs, 29–33 s each, 2 valid first time with the root cause resolved to `lis`; 1 rejected with a clear repair message ("restart_deployment on 'lis' takes no replicas"). Expect the repair attempt to be needed about one time in three with this 4B model.
 - CI and tests keep the keyless `fake:echo` default.
 

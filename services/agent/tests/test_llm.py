@@ -272,3 +272,15 @@ def test_timeouts_default_per_provider_and_can_be_overridden() -> None:
     assert make_chat_model("ollama:m", {}).request_timeout == 300.0
     env = {"AIOPS_LLM_TIMEOUT_SECONDS": "15"}
     assert make_chat_model("ollama:m", env).request_timeout == 15.0
+
+
+def test_ollama_uses_model_sampling_and_no_retries(fake_openai) -> None:
+    """Reasoning models loop at temperature 0 (verified with nemotron-3-nano:4b)."""
+    ollama = make_chat_model("ollama:m", {}, **fake_openai.clients())
+    ollama.invoke("hi")
+    assert "temperature" not in fake_openai.requests[0]["body"]
+    assert ollama.max_retries == 0
+
+    hosted = make_chat_model("openai:m", KEYS, **fake_openai.clients())
+    hosted.invoke("hi")
+    assert fake_openai.requests[1]["body"]["temperature"] == 0

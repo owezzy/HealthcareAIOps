@@ -46,6 +46,11 @@ class Provider:
     strict: bool = False
     #: Per-request timeout. Local models on a laptop need far longer than hosted APIs.
     timeout_seconds: float = 60.0
+    #: None: the model's own recommended sampling. Reasoning models loop at 0.
+    temperature: float | None = 0.0
+    #: Client retries. A local server handles one request at a time and keeps
+    #: generating for an abandoned one, so retries only queue behind it.
+    max_retries: int = 2
 
 
 PROVIDERS: dict[str, Provider] = {
@@ -62,7 +67,13 @@ PROVIDERS: dict[str, Provider] = {
     # Ollama's OpenAI-compatible API on the local daemon. Cloud models
     # (`*:cloud`) are proxied by the daemon and billed as Ollama credits.
     "ollama": Provider(
-        "ollama", "http://localhost:11434/v1", None, "json_schema", timeout_seconds=300.0
+        "ollama",
+        "http://localhost:11434/v1",
+        None,
+        "json_schema",
+        timeout_seconds=300.0,
+        temperature=None,
+        max_retries=0,
     ),
 }
 
@@ -112,9 +123,9 @@ def make_chat_model(
         api_key=api_key,
         base_url=env.get("AIOPS_LLM_BASE_URL") or provider.base_url,
         stream_usage=True,
-        temperature=0,
+        temperature=provider.temperature,
         timeout=float(env.get("AIOPS_LLM_TIMEOUT_SECONDS") or provider.timeout_seconds),
-        max_retries=2,
+        max_retries=provider.max_retries,
         http_client=http_client,
         http_async_client=http_async_client,
     )
