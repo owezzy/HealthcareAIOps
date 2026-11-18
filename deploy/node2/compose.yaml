@@ -1,0 +1,40 @@
+# Simulated K3s worker "node-2" on owezzy-db (ADR-0013): a real Kubernetes
+# node that runs as a Docker container on the same host, so scenario S5 can
+# fail a node without a second VPS. Tainted so only the simulated estate runs
+# here. Setup, checks and removal: docs/how-to/add-simulated-node-2.md
+name: aiops-node2
+
+services:
+  node-2:
+    image: rancher/k3s:v1.37.2-k3s1   # must match the server's K3s version
+    container_name: aiops-node-2
+    hostname: node-2
+    command:
+      - agent
+      - --node-name=node-2
+      - --node-label=aiops.io/estate=true
+      - --node-taint=aiops.io/estate=only:NoSchedule
+    environment:
+      # The address must be in the API server certificate (161.97.181.164 is).
+      K3S_URL: https://161.97.181.164:6443
+    env_file: node2.env               # K3S_TOKEN only; never committed
+    privileged: true                  # required for a kubelet and containerd inside Docker
+    tmpfs: [/run, /var/run]
+    volumes:
+      - node2-data:/var/lib/rancher/k3s
+    networks:
+      node2:
+        ipv4_address: 172.31.250.10
+    mem_limit: 512m                   # host kubelet evicts below 500 MiB free
+    # Survives host reboots, but stays down after `docker stop` (S5 recovery is deliberate).
+    restart: unless-stopped
+
+networks:
+  node2:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.31.250.0/24     # matched by the two firewall rules in the how-to
+
+volumes:
+  node2-data:

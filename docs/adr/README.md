@@ -16,3 +16,4 @@ Format: Status / Context / Decision / Consequences. Copy `0000-template.md` for 
 | [0010](0010-frontend-structure-and-signal-store.md) | Frontend feature structure and NgRx SignalStore | Accepted |
 | [0011](0011-bounded-contexts-and-hexagonal-services.md) | Bounded contexts with hexagonal layering; shared contracts package | Accepted |
 | [0012](0012-hosting-on-owezzy-db.md) | Host the demo on the existing owezzy-db K3s node; second worker for the estate | Accepted |
+| [0013](0013-simulated-node-2.md) | Simulate node-2 as a K3s node in a Docker container (no second VPS) | Accepted |

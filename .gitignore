@@ -22,3 +22,6 @@ node_modules/
 
 # IDE
 .idea/
+
+# Simulated node-2 join token
+deploy/node2/node2.env

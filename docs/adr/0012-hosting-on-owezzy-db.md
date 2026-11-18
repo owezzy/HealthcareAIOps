@@ -23,9 +23,9 @@
    - **Database:** the cluster's shared Postgres (`postgres` namespace, `pgvector/pgvector:0.8.1-pg18`, retained 5 GiB volume, already used by SchoolCRM and GG-Garage) with a dedicated `aiops` database and role. Alembic owns the schema.
    - **Why the tunnel and not an ingress controller:** Traefik is disabled on this node, and port 80 serves certbot's standalone renewals for `db.owenadirah.com`. An ingress controller would need 80/443 opened, cert-manager, and would conflict with those renewals. The tunnel opens no inbound ports and matches the other apps.
 2. Budget for the app tier: about 0.6 GiB of memory requests, 1.2 GiB of limits (no extra Postgres).
-3. For week 2, add a **second small VPS as a K3s worker** (tainted for the simulated estate only). The S5 node-failure scenario then stops a real node without touching the other portfolio apps, and the estate has the `node-2` the scenarios describe.
+3. ~~For week 2, add a **second small VPS as a K3s worker**~~ *Superseded by ADR-0013: node-2 runs as a K3s node in a Docker container on this host.* Original text: for week 2, add a second small VPS as a K3s worker (tainted for the simulated estate only). The S5 node-failure scenario then stops a real node without touching the other portfolio apps, and the estate has the `node-2` the scenarios describe.
 
 ## Consequences
-- No new VPS for the app tier. Week 2 needs either the extra worker (recommended) or a lean observability stack on this node alone, with S5 limited to a cordon-and-evict simulation.
+- No new VPS at all: the app tier runs on this node, and node-2 is simulated in Docker (ADR-0013).
 - The demo shares a failure domain with other portfolio apps. The README and case study must say it is a demo environment, not high availability.
 - Out of scope but noted: Postgres (5432) and Neo4j (7687) on this host accept connections from any address (TLS-only by firewall comment), and SSH allows `root` login. Restricting both is recommended.
