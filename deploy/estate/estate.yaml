@@ -1,0 +1,569 @@
+# GENERATED from sim/services.yaml by `python -m aiops_sim.manifests`. Do not edit by hand.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: aiops-estate
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: estate
+  namespace: aiops-estate
+spec:
+  hard:
+    requests.memory: 464Mi
+    limits.memory: 832Mi
+    limits.cpu: '3'
+    pods: '12'
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: estate-internal
+  namespace: aiops-estate
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sso
+  namespace: aiops-estate
+  labels: &id001
+    app: sso
+    aiops.io/component: sso
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sso
+  template:
+    metadata:
+      labels: *id001
+    spec:
+      containers:
+      - name: sso
+        image: healthcare-aiops-estate
+        env:
+        - name: COMPONENT_ID
+          value: sso
+        - name: WORK_CPU_MS
+          value: '5'
+        - name: AIOPS_ESTATE_ADMIN_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: estate-admin
+              key: token
+              optional: true
+        resources:
+          requests:
+            cpu: 10m
+            memory: 48Mi
+          limits:
+            cpu: 250m
+            memory: 96Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+        ports:
+        - name: http
+          containerPort: 8080
+        readinessProbe:
+          httpGet: &id002
+            path: /health
+            port: http
+          periodSeconds: 10
+        livenessProbe:
+          httpGet: *id002
+          periodSeconds: 20
+          failureThreshold: 3
+      tolerations:
+      - key: node.kubernetes.io/not-ready
+        operator: Exists
+        effect: NoExecute
+        tolerationSeconds: 30
+      - key: node.kubernetes.io/unreachable
+        operator: Exists
+        effect: NoExecute
+        tolerationSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sso
+  namespace: aiops-estate
+spec:
+  selector:
+    app: sso
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ehr-api
+  namespace: aiops-estate
+  labels: &id001
+    app: ehr-api
+    aiops.io/component: ehr-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ehr-api
+  template:
+    metadata:
+      labels: *id001
+    spec:
+      containers:
+      - name: ehr-api
+        image: healthcare-aiops-estate
+        env:
+        - name: COMPONENT_ID
+          value: ehr-api
+        - name: DB_POOL_SIZE
+          value: '50'
+        - name: APP_VERSION
+          value: v2.3.0
+        - name: AIOPS_ESTATE_ADMIN_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: estate-admin
+              key: token
+              optional: true
+        resources:
+          requests:
+            cpu: 10m
+            memory: 48Mi
+          limits:
+            cpu: 250m
+            memory: 96Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+        ports:
+        - name: http
+          containerPort: 8080
+        readinessProbe:
+          httpGet: &id002
+            path: /health
+            port: http
+          periodSeconds: 10
+        livenessProbe:
+          httpGet: *id002
+          periodSeconds: 20
+          failureThreshold: 3
+      tolerations:
+      - key: node.kubernetes.io/not-ready
+        operator: Exists
+        effect: NoExecute
+        tolerationSeconds: 30
+      - key: node.kubernetes.io/unreachable
+        operator: Exists
+        effect: NoExecute
+        tolerationSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ehr-api
+  namespace: aiops-estate
+spec:
+  selector:
+    app: ehr-api
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: interface-engine
+  namespace: aiops-estate
+  labels: &id001
+    app: interface-engine
+    aiops.io/component: interface-engine
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: interface-engine
+  template:
+    metadata:
+      labels: *id001
+    spec:
+      containers:
+      - name: interface-engine
+        image: healthcare-aiops-estate
+        env:
+        - name: COMPONENT_ID
+          value: interface-engine
+        - name: AIOPS_ESTATE_ADMIN_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: estate-admin
+              key: token
+              optional: true
+        resources:
+          requests:
+            cpu: 10m
+            memory: 48Mi
+          limits:
+            cpu: 250m
+            memory: 96Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+        ports:
+        - name: http
+          containerPort: 8080
+        readinessProbe:
+          httpGet: &id002
+            path: /health
+            port: http
+          periodSeconds: 10
+        livenessProbe:
+          httpGet: *id002
+          periodSeconds: 20
+          failureThreshold: 3
+      tolerations:
+      - key: aiops.io/estate
+        operator: Equal
+        value: only
+        effect: NoSchedule
+      - key: node.kubernetes.io/not-ready
+        operator: Exists
+        effect: NoExecute
+        tolerationSeconds: 30
+      - key: node.kubernetes.io/unreachable
+        operator: Exists
+        effect: NoExecute
+        tolerationSeconds: 30
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - node-2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: interface-engine
+  namespace: aiops-estate
+spec:
+  selector:
+    app: interface-engine
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lis
+  namespace: aiops-estate
+  labels: &id001
+    app: lis
+    aiops.io/component: lis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lis
+  template:
+    metadata:
+      labels: *id001
+    spec:
+      containers:
+      - name: lis
+        image: healthcare-aiops-estate
+        env:
+        - name: COMPONENT_ID
+          value: lis
+        - name: BALLAST_MI
+          value: '80'
+        - name: AIOPS_ESTATE_ADMIN_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: estate-admin
+              key: token
+              optional: true
+        resources:
+          requests:
+            cpu: 10m
+            memory: 128Mi
+          limits:
+            cpu: 250m
+            memory: 160Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+        ports:
+        - name: http
+          containerPort: 8080
+        readinessProbe:
+          httpGet: &id002
+            path: /health
+            port: http
+          periodSeconds: 10
+        livenessProbe:
+          httpGet: *id002
+          periodSeconds: 20
+          failureThreshold: 3
+      tolerations:
+      - key: aiops.io/estate
+        operator: Equal
+        value: only
+        effect: NoSchedule
+      - key: node.kubernetes.io/not-ready
+        operator: Exists
+        effect: NoExecute
+        tolerationSeconds: 30
+      - key: node.kubernetes.io/unreachable
+        operator: Exists
+        effect: NoExecute
+        tolerationSeconds: 30
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - node-2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lis
+  namespace: aiops-estate
+spec:
+  selector:
+    app: lis
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pacs
+  namespace: aiops-estate
+  labels: &id001
+    app: pacs
+    aiops.io/component: pacs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pacs
+  template:
+    metadata:
+      labels: *id001
+    spec:
+      containers:
+      - name: pacs
+        image: healthcare-aiops-estate
+        env:
+        - name: COMPONENT_ID
+          value: pacs
+        - name: AIOPS_ESTATE_ADMIN_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: estate-admin
+              key: token
+              optional: true
+        resources:
+          requests:
+            cpu: 10m
+            memory: 48Mi
+          limits:
+            cpu: 250m
+            memory: 96Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+        ports:
+        - name: http
+          containerPort: 8080
+        readinessProbe:
+          httpGet: &id002
+            path: /health
+            port: http
+          periodSeconds: 10
+        livenessProbe:
+          httpGet: *id002
+          periodSeconds: 20
+          failureThreshold: 3
+      tolerations:
+      - key: aiops.io/estate
+        operator: Equal
+        value: only
+        effect: NoSchedule
+      - key: node.kubernetes.io/not-ready
+        operator: Exists
+        effect: NoExecute
+        tolerationSeconds: 30
+      - key: node.kubernetes.io/unreachable
+        operator: Exists
+        effect: NoExecute
+        tolerationSeconds: 30
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - node-2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pacs
+  namespace: aiops-estate
+spec:
+  selector:
+    app: pacs
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: patient-portal
+  namespace: aiops-estate
+  labels: &id001
+    app: patient-portal
+    aiops.io/component: patient-portal
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: patient-portal
+  template:
+    metadata:
+      labels: *id001
+    spec:
+      containers:
+      - name: patient-portal
+        image: healthcare-aiops-estate
+        env:
+        - name: COMPONENT_ID
+          value: patient-portal
+        - name: AIOPS_ESTATE_ADMIN_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: estate-admin
+              key: token
+              optional: true
+        resources:
+          requests:
+            cpu: 10m
+            memory: 48Mi
+          limits:
+            cpu: 250m
+            memory: 96Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+        ports:
+        - name: http
+          containerPort: 8080
+        readinessProbe:
+          httpGet: &id002
+            path: /health
+            port: http
+          periodSeconds: 10
+        livenessProbe:
+          httpGet: *id002
+          periodSeconds: 20
+          failureThreshold: 3
+      tolerations:
+      - key: node.kubernetes.io/not-ready
+        operator: Exists
+        effect: NoExecute
+        tolerationSeconds: 30
+      - key: node.kubernetes.io/unreachable
+        operator: Exists
+        effect: NoExecute
+        tolerationSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: patient-portal
+  namespace: aiops-estate
+spec:
+  selector:
+    app: patient-portal
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loadgen
+  namespace: aiops-estate
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loadgen
+  template:
+    metadata:
+      labels:
+        app: loadgen
+    spec:
+      containers:
+      - name: loadgen
+        image: healthcare-aiops-estate
+        env:
+        - name: RATE_PER_SECOND
+          value: '2'
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            cpu: 250m
+            memory: 64Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+        command:
+        - python
+        - -m
+        - aiops_sim.loadgen
+      tolerations:
+      - key: node.kubernetes.io/not-ready
+        operator: Exists
+        effect: NoExecute
+        tolerationSeconds: 30
+      - key: node.kubernetes.io/unreachable
+        operator: Exists
+        effect: NoExecute
+        tolerationSeconds: 30

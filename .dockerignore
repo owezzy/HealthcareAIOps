@@ -1,0 +1,14 @@
+**/node_modules
+**/.venv
+**/dist
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+.git
+.idea
+.codegraph
+.beads
+.omx
+docs
+deploy/overlays/*/secrets.env
+**/*.env

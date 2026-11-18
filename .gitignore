@@ -5,3 +5,23 @@
 .beads-credential-key
 .beads/proxieddb/
 *.gate.lock*
+
+# macOS
+.DS_Store
+._*
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+
+# IDE
+.idea/
+
+# Simulated node-2 join token
+deploy/node2/node2.env

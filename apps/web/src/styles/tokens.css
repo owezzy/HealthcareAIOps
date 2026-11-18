@@ -1,0 +1,122 @@
+/*
+ * Design tokens: the contract between the design and the code.
+ * Copied from docs/design/mockups/assets/console.css (OpenDesign export);
+ * only the font family names changed, to match the self-hosted variable fonts.
+ * Dark is the default; <html data-theme="light"> switches to light.
+ * Spec: docs/design/frontend-design.md §2.2. Never hard-code hex values elsewhere.
+ */
+
+:root {
+    color-scheme: dark;
+
+    --sans: 'Geist Variable', 'Geist', 'Inter', ui-sans-serif, system-ui,
+        -apple-system, 'Segoe UI', sans-serif;
+    --mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, 'SF Mono',
+        Menlo, Consolas, monospace;
+
+    --bg: #0a0c10;
+    --bg-2: #0d1015;
+    --panel: #11151b;
+    --panel-2: #151a22;
+    --panel-3: #1a2029;
+    --line: #222a35;
+    --line-2: #2d3745;
+    --line-3: #3a4656;
+
+    --text: #e9edf3;
+    --text-2: #a9b4c3;
+    --text-3: #7f8b9c;
+
+    --accent: #48d3c0;
+    --accent-text: #06201c;
+    --accent-bg: rgba(72, 211, 192, 0.1);
+    --accent-line: rgba(72, 211, 192, 0.34);
+
+    --sev-critical: #ff6b70;
+    --sev-critical-text: #ffa8ab;
+    --sev-critical-bg: rgba(255, 107, 112, 0.12);
+    --sev-high: #f08a3c;
+    --sev-high-text: #ffbd8b;
+    --sev-high-bg: rgba(240, 138, 60, 0.12);
+    --sev-medium: #e7b84a;
+    --sev-medium-text: #ffd88c;
+    --sev-medium-bg: rgba(231, 184, 74, 0.12);
+    --sev-low: #5b9bf8;
+    --sev-low-text: #aecaff;
+    --sev-low-bg: rgba(91, 155, 248, 0.12);
+
+    --ok: #46c08a;
+    --ok-text: #8fe6ba;
+    --ok-bg: rgba(70, 192, 138, 0.11);
+
+    --tier-line: #37424f;
+    --tier-text: #c9d3e0;
+    --tier-bg: rgba(255, 255, 255, 0.035);
+
+    --ai-bg: color-mix(in srgb, var(--accent) 4%, var(--panel));
+    --ai-line: color-mix(in srgb, var(--accent) 30%, var(--line));
+
+    --surface-hover: #1c222c;
+    --shadow: 0 18px 40px rgba(0, 0, 0, 0.42);
+    --radius: 8px;
+    --radius-sm: 5px;
+    --dur: 160ms;
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --nav-w: 228px;
+}
+
+:root[data-theme='light'],
+[data-theme='light'] {
+    color-scheme: light;
+
+    --bg: #f4f6f8;
+    --bg-2: #eef2f5;
+    --panel: #ffffff;
+    --panel-2: #f7f9fb;
+    --panel-3: #eff3f7;
+    --line: #e0e6ec;
+    --line-2: #cbd4de;
+    --line-3: #b3bfcd;
+
+    --text: #111820;
+    --text-2: #495666;
+    --text-3: #657287;
+
+    --accent: #0d8074;
+    --accent-text: #ffffff;
+    --accent-bg: rgba(13, 128, 116, 0.08);
+    --accent-line: rgba(13, 128, 116, 0.34);
+
+    --sev-critical: #c2262e;
+    --sev-critical-text: #a81c25;
+    --sev-critical-bg: #fdecec;
+    --sev-high: #a94f08;
+    --sev-high-text: #8f4104;
+    --sev-high-bg: #fdf1e7;
+    --sev-medium: #8a6100;
+    --sev-medium-text: #755100;
+    --sev-medium-bg: #fdf6df;
+    --sev-low: #1b57b4;
+    --sev-low-text: #164a99;
+    --sev-low-bg: #ebf2fe;
+
+    --ok: #127a55;
+    --ok-text: #0f6a4a;
+    --ok-bg: #e7f6ef;
+
+    --tier-line: #ccd6e1;
+    --tier-text: #344356;
+    --tier-bg: #f4f7fa;
+
+    --ai-bg: color-mix(in srgb, var(--accent) 3%, var(--panel));
+    --ai-line: color-mix(in srgb, var(--accent) 26%, var(--line));
+
+    --surface-hover: #eaf0f6;
+    --shadow: 0 16px 36px rgba(16, 24, 40, 0.14);
+}
+
+@media (max-width: 1080px) {
+    :root {
+        --nav-w: 64px;
+    }
+}

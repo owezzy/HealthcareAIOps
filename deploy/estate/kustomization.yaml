@@ -1,0 +1,5 @@
+# Simulated estate (ADR-0013). estate.yaml is generated: uv run python -m aiops_sim.manifests
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - estate.yaml

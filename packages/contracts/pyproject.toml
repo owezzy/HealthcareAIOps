@@ -1,0 +1,13 @@
+[project]
+name = "aiops-contracts"
+version = "0.1.0"
+description = "Cross-process contracts: vocabulary, component catalogue, scenarios."
+requires-python = ">=3.14"
+dependencies = [
+    "pydantic>=2.11",
+    "pyyaml>=6.0.2",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

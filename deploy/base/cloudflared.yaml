@@ -1,0 +1,51 @@
+# Publishes the console at aiops.owenadirah.com through the locally-managed
+# Cloudflare Tunnel "healthcare-aiops" (created with the cloudflared CLI; see
+# docs/how-to/deploy-to-owezzy-db.md). Routing lives here, not in the dashboard.
+# Only the web service is published; its nginx routes /api and /api/copilotkit.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloudflared-config
+  namespace: aiops-app
+data:
+  config.yaml: |
+    tunnel: 0fde4094-c28a-4977-a554-5c72582235f0
+    ingress:
+      - hostname: aiops.owenadirah.com
+        service: http://web.aiops-app.svc.cluster.local:8080
+      - service: http_status:404
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudflared
+  namespace: aiops-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: cloudflared }
+  template:
+    metadata:
+      labels: { app: cloudflared }
+    spec:
+      securityContext: { runAsNonRoot: true, runAsUser: 65532 }
+      containers:
+        - name: cloudflared
+          image: cloudflare/cloudflared:2026.10.0
+          args: ["tunnel", "--no-autoupdate", "--metrics", "0.0.0.0:2000",
+                 "--config", "/etc/cloudflared/config.yaml", "run"]
+          env:
+            # Tunnel credentials only; the routing comes from the config above.
+            - name: TUNNEL_TOKEN
+              valueFrom: { secretKeyRef: { name: cloudflared-token, key: token } }
+          volumeMounts:
+            - { name: config, mountPath: /etc/cloudflared, readOnly: true }
+          livenessProbe:
+            httpGet: { path: /ready, port: 2000 }
+            periodSeconds: 20
+          resources:
+            requests: { cpu: 10m, memory: 24Mi }
+            limits: { memory: 64Mi }
+      volumes:
+        - name: config
+          configMap: { name: cloudflared-config }

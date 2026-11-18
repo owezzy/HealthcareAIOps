@@ -1,0 +1,28 @@
+# Apply once on the cluster (kubectl apply -f deploy/flux/healthcare-aiops.yaml).
+# Flux then follows release tags v0.1.0, v0.2.0, ... and applies the demo overlay.
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: healthcare-aiops
+  namespace: flux-system
+spec:
+  interval: 5m
+  url: https://github.com/owezzy/HealthcareAIOps
+  ref:
+    semver: ">=0.1.0"
+  # Private repository: add `secretRef: { name: healthcare-aiops-git }` with a read-only deploy key.
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: healthcare-aiops
+  namespace: flux-system
+spec:
+  interval: 10m
+  sourceRef:
+    kind: GitRepository
+    name: healthcare-aiops
+  path: ./deploy/overlays/demo
+  prune: true
+  wait: true
+  timeout: 5m

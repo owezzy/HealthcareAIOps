@@ -1,0 +1,3 @@
+if [ -x .beads/hooks/pre-push ]; then
+  .beads/hooks/pre-push "$@"
+fi

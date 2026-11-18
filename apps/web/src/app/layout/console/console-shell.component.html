@@ -1,0 +1,127 @@
+<a class="skip-link" href="#main-content">Skip to content</a>
+
+<aside class="sidebar" id="sidebar" aria-label="Console navigation">
+    <div class="brand">
+        <span class="brand-mark"><app-icon name="activity" [size]="17" /></span>
+        <span class="brand-text">
+            <strong>Healthcare AIOps</strong>
+            <span>Agent console</span>
+        </span>
+    </div>
+
+    <nav class="nav" aria-label="Primary">
+        <p class="nav-label">Operations</p>
+        @for (item of navItems; track item.path) {
+            <a
+                class="nav-item"
+                [routerLink]="item.path"
+                routerLinkActive
+                ariaCurrentWhenActive="page"
+                [attr.title]="item.label"
+                (click)="navOpen.set(false)"
+            >
+                <app-icon [name]="item.icon" />
+                <span class="nav-text">{{ item.label }}</span>
+            </a>
+        }
+    </nav>
+
+    <div class="sidebar-foot">
+        <div class="agent-line">
+            <span class="dot" [attr.data-tone]="session.agentStatus()"></span>
+            agent-svc ·
+            @switch (session.agentStatus()) {
+                @case ('up') {
+                    available
+                }
+                @case ('down') {
+                    unavailable
+                }
+                @default {
+                    status unknown
+                }
+            }
+        </div>
+    </div>
+</aside>
+
+@if (navOpen()) {
+    <div
+        class="nav-scrim"
+        aria-hidden="true"
+        (click)="navOpen.set(false)"
+    ></div>
+}
+
+<div class="main">
+    <header class="topbar">
+        <button
+            class="iconbtn nav-toggle"
+            type="button"
+            aria-controls="sidebar"
+            [attr.aria-expanded]="navOpen()"
+            [attr.aria-label]="
+                navOpen() ? 'Close navigation' : 'Open navigation'
+            "
+            (click)="navOpen.set(!navOpen())"
+        >
+            <app-icon [name]="navOpen() ? 'close' : 'menu'" [size]="18" />
+        </button>
+
+        <span class="env-badge">
+            <app-icon name="flask" [size]="12" />DEMO<span class="env-detail">
+                · synthetic data</span
+            >
+        </span>
+
+        <div class="topbar-spacer"></div>
+
+        <div class="topbar-right">
+            <app-budget-meter
+                [spentUsd]="session.budget().spentUsd"
+                [capUsd]="session.budget().capUsd"
+                [calls]="session.budget().calls"
+                [callCap]="session.budget().callCap"
+                [ratio]="session.budgetRatio()"
+                [state]="session.budget().state"
+            />
+            <app-role-switcher
+                [role]="session.role()"
+                (roleChange)="setRole($event)"
+            />
+            <button
+                class="iconbtn"
+                type="button"
+                [attr.aria-label]="
+                    session.theme() === 'dark'
+                        ? 'Switch to light theme'
+                        : 'Switch to dark theme'
+                "
+                (click)="session.toggleTheme()"
+            >
+                <app-icon
+                    [name]="session.theme() === 'dark' ? 'sun' : 'moon'"
+                />
+            </button>
+        </div>
+    </header>
+
+    @if (session.replayMode()) {
+        <div class="banner" data-tone="warn" role="status">
+            <strong>Replay mode.</strong>
+            Today's LLM budget is used up, so the agent is paused and recorded
+            runs are shown. Monitoring, incidents and audit stay available.
+        </div>
+    }
+    @if (session.agentStatus() === 'down') {
+        <div class="banner" data-tone="deny" role="status">
+            <strong>AI investigation unavailable.</strong>
+            Core monitoring continues: alerts, correlation and blast radius
+            still update.
+        </div>
+    }
+
+    <main class="content" id="main-content" tabindex="-1">
+        <router-outlet />
+    </main>
+</div>

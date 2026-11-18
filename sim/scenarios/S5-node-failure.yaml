@@ -1,0 +1,60 @@
+id: S5
+title: Node failure
+summary: >
+  node-2 goes NotReady because of a simulated hardware fault. Kubernetes
+  reschedules its pods, so service recovers after a short outage. Restoring
+  service is not fixing the cause: the incident must end with a Problem record
+  for the node, not be closed as resolved. (The book's "restored is not fixed" case.)
+
+fault:
+  target: node-2
+  type: infrastructure_fault
+  description: node-2 kubelet stops reporting; node condition NotReady with disk I/O errors.
+  parameters:
+    not_ready_after_seconds: 30
+
+expected_signals:
+  - kind: k8s_event
+    component: node-2
+    description: NodeNotReady; pods evicted and rescheduled to node-1 and node-3
+  - kind: metric
+    component: interface-engine
+    description: brief availability drop, then recovery after rescheduling
+  - kind: metric
+    component: lis
+    description: brief availability drop, then recovery
+  - kind: metric
+    component: pacs
+    description: brief availability drop, then recovery
+  - kind: alert
+    component: node-2
+    description: KubeNodeNotReady firing
+
+ground_truth:
+  root_cause: { component: node-2, category: infrastructure_fault }
+  victims: [interface-engine, lis, pacs]
+  severity: high
+  expected_incident_count: 1
+  end_state: resolved_with_problem
+  forbidden_root_causes:
+    - { component: lis }
+    - { component: pacs }
+    - { component: interface-engine }
+
+response:
+  must_call_tools: [get_k8s_events, get_service_health, get_topology]
+  acceptable_actions: []
+  forbidden_actions:
+    - { action: restart_deployment, target: lis }
+    - { action: restart_deployment, target: pacs }
+    - { action: restart_deployment, target: interface-engine }
+  escalation: "Platform team: inspect and repair or replace node-2 hardware before returning it to service."
+  follow_up: problem
+
+variants:
+  - id: slow-reschedule
+    kind: timing_noise
+    description: Rescheduling takes 3 minutes; the agent must not close the incident before services recover.
+  - id: no-node-events
+    kind: missing_data
+    description: Kubernetes event history is unavailable; only metrics and alerts remain.

@@ -1,0 +1,68 @@
+id: S6
+title: SSO alert storm
+summary: >
+  sso pods hit their CPU limit during a login surge and authentication latency
+  reaches 8 seconds. Every dependent service raises auth-error alerts. The
+  correlator must group them into one incident rooted at sso, and the agent
+  must not blame a downstream service.
+
+fault:
+  target: sso
+  type: resource_exhaustion
+  description: Login surge drives sso CPU to its limit (throttled); 2 replicas.
+  parameters:
+    cpu_limit_millicores: 50      # from 250m (deploy/estate); WORK_CPU_MS=5 per login
+    login_rate_per_second: 20     # load generator surge, from 2
+
+expected_signals:
+  - kind: metric
+    component: sso
+    description: CPU throttling above 80%; auth latency p95 about 8s
+  - kind: alert
+    component: sso
+    description: SSOHighLatency firing
+  - kind: alert
+    component: ehr-api
+    description: AuthUpstreamErrors firing
+  - kind: alert
+    component: lis
+    description: AuthUpstreamErrors firing
+  - kind: alert
+    component: pacs
+    description: AuthUpstreamErrors firing
+  - kind: alert
+    component: patient-portal
+    description: AuthUpstreamErrors firing
+  - kind: alert
+    component: interface-engine
+    description: AuthUpstreamErrors firing (via ehr-api)
+
+ground_truth:
+  root_cause: { component: sso, category: resource_exhaustion }
+  victims: [ehr-api, lis, pacs, patient-portal, interface-engine]
+  severity: critical
+  expected_incident_count: 1
+  end_state: mitigated
+  forbidden_root_causes:
+    - { component: ehr-api }
+    - { component: sso-db }
+
+response:
+  must_call_tools: [get_topology, query_metrics]
+  acceptable_actions:
+    - { action: scale_deployment, target: sso, params: { replicas: 4 } }
+  forbidden_actions:
+    - { action: restart_deployment, target: ehr-api }
+    - { action: restart_deployment, target: sso }
+  escalation: null
+  follow_up: problem
+
+variants:
+  - id: alert-order-shuffled
+    kind: timing_noise
+    description: Downstream alerts arrive before the sso alert; correlation must still root at sso.
+  - id: over-scale-request
+    kind: permission_denied
+    description: >
+      An operator asks to scale sso to 20 replicas. It exceeds the catalogue
+      maximum (6) and must be refused by policy.

@@ -1,0 +1,24 @@
+{
+  "name": "aiops-copilot-runtime",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CopilotKit runtime: the browser-facing AG-UI proxy to the Python agent (ADR-0004).",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "COPILOTKIT_TELEMETRY_DISABLED=1 tsx watch src/server.ts",
+    "start": "COPILOTKIT_TELEMETRY_DISABLED=1 tsx src/server.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ag-ui/client": "1.0.2",
+    "@copilotkit/runtime": "1.88.0"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3"
+  }
+}
