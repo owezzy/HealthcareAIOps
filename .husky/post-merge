@@ -1,0 +1,3 @@
+if [ -x .beads/hooks/post-merge ]; then
+  .beads/hooks/post-merge "$@"
+fi

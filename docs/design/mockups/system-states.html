@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Healthcare AIOps Agent — System states</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+@layer od-layout {
+  [hidden]:not([hidden="until-found" i]) { display: none !important; }
+  dialog:not([open]) { display: none !important; }
+  :where(.od-stack,.od-row,.od-row-top,.od-cluster,.od-grid,.od-field,.od-stat,.od-cell,.od-tile) > :where(*) { min-width: 0; }
+  .od-row { display: flex; align-items: center; gap: var(--od-gap, 8px); }
+  .od-icon { display: inline-block; inline-size: var(--od-icon-size, 1em); block-size: var(--od-icon-size, 1em); flex: none; }
+  .od-truncate { display: block; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .od-clamp-2 { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+  .od-nowrap { white-space: nowrap; }
+}
+:root [hidden]:where(:not([hidden="until-found" i])) { display: none; }
+</style>
+<link rel="stylesheet" href="assets/console.css">
+<link rel="stylesheet" href="assets/boards.css">
+</head>
+<body class="board-page">
+
+<svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+  <defs>
+    <symbol id="i-sev-critical" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.2 2.5h7.6l5.7 5.7v7.6l-5.7 5.7H8.2l-5.7-5.7V8.2l5.7-5.7Z"/><path d="M12 7.5v5"/><path d="M12 16.2h.01"/></symbol>
+    <symbol id="i-sev-high" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 2.5 17.4A2 2 0 0 0 4.2 20.4h15.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+    <symbol id="i-sev-low" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.4"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10" width="15" height="10" rx="2"/><path d="M8 10V7.2a4 4 0 0 1 8 0V10"/></symbol>
+    <symbol id="i-shield-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.8 20 6v6c0 5-3.4 8.3-8 9.2C7.4 20.3 4 17 4 12V6l8-3.2Z"/><path d="m8.6 12 2.4 2.4 4.4-4.8"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.8 20 6v6c0 5-3.4 8.3-8 9.2C7.4 20.3 4 17 4 12V6l8-3.2Z"/></symbol>
+    <symbol id="i-activity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h3.8l2.4-7 4 14 2.5-7H21"/></symbol>
+    <symbol id="i-sparkle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M11.4 3 13 8.5l5.4 1.6L13 11.7 11.4 17 9.7 11.7 4.3 10.1 9.7 8.5 11.4 3Z"/><path d="M18.6 14.5 19.4 17l2.4.8-2.4.8-.8 2.4-.8-2.4-2.4-.8 2.4-.8.8-2.5Z"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.8"/><path d="m16.2 16.2 4.3 4.3"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.7"/><path d="M12 7.2v5.2l3.2 1.9"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.2 4.2L19 6.8"/></symbol>
+    <symbol id="i-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.7 2.7L16.4 9"/></symbol>
+    <symbol id="i-chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9.5 6 6 6-6 6"/></symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9.5 6 6 6-6"/></symbol>
+    <symbol id="i-terminal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.8" y="4.5" width="18.4" height="15" rx="2"/><path d="m6.5 9 3 3-3 3"/><path d="M13.2 15h4.3"/></symbol>
+    <symbol id="i-wrench" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.6 6.2a4.6 4.6 0 0 0-5.9 5.9L3.4 17.4a1.8 1.8 0 0 0 0 2.5l.7.7a1.8 1.8 0 0 0 2.5 0l5.3-5.3a4.6 4.6 0 0 0 5.9-5.9l-2.6 2.6-2.6-2.6 2-3.2Z"/></symbol>
+    <symbol id="i-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M3.5 6.5h17"/><path d="M3.5 12h17"/><path d="M3.5 17.5h17"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.4v2.2M12 19.4v2.2M2.4 12h2.2M19.4 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M6.8 17.2l-1.6 1.6"/></symbol>
+    <symbol id="i-flask" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9.2 3h5.6"/><path d="M10 3v5.2l-5.6 9.4A2 2 0 0 0 6.2 20.7h11.6a2 2 0 0 0 1.8-3.1L14 8.2V3"/><path d="M7.4 15h9.2"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.8"/><path d="M4.5 20.5c0-4.2 3.4-6.4 7.5-6.4s7.5 2.2 7.5 6.4"/></symbol>
+    <symbol id="i-arrow-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="m5.5 11.5 6.5-6.5 6.5 6.5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></symbol>
+    <symbol id="i-check-square" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.2" y="3.2" width="17.6" height="17.6" rx="3"/><path d="m7.8 12.2 2.8 2.8 5.6-6.4"/></symbol>
+    <symbol id="i-git" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="6" r="2.4"/><circle cx="7" cy="18" r="2.4"/><circle cx="17" cy="9" r="2.4"/><path d="M7 8.4v7.2"/><path d="M17 11.4c0 3.2-2.2 4.2-5.4 4.2H7"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 5.5v13L19 12 8.5 5.5Z"/></symbol>
+    <symbol id="i-bar-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 20V11.5"/><path d="M10 20V4.5"/><path d="M16 20v-5.5"/><path d="M22 20H2"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8.5 6h12.5"/><path d="M8.5 12h12.5"/><path d="M8.5 18h12.5"/><path d="M3.5 6h.01"/><path d="M3.5 12h.01"/><path d="M3.5 18h.01"/></symbol>
+  </defs>
+</svg>
+
+<main class="board">
+  <header class="board-head">
+    <div>
+      <p class="eyebrow">Healthcare AIOps Agent · design artifacts</p>
+      <h1>System states</h1>
+      <p class="board-sub">Four operational edge cases at 1440 px: budget exhaustion, agent unavailability, an empty queue, and the streaming investigation state. Each frame reuses the console's tokens and components.</p>
+    </div>
+    <div class="board-meta">
+      <span class="tag-pill">1440 px</span>
+      <span class="tag-pill">dark</span>
+      <span class="tag-pill">synthetic data</span>
+      <span class="tag-pill">WCAG AA</span>
+    </div>
+  </header>
+
+  <!-- ============================ 01 REPLAY ============================ -->
+  <section class="frame-block">
+    <div class="frame-caption">
+      <span class="frame-no">01</span>
+      <div>
+        <h2>Daily LLM budget reached → Replay mode</h2>
+        <p>The console keeps serving recorded investigations instead of going blank. The banner and meter carry the state; findings keep their original timestamps and the chat is read-only.</p>
+      </div>
+    </div>
+
+    <div class="frame">
+      <div class="app">
+        <aside class="sidebar">
+          <div class="brand">
+            <span class="brand-mark"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M2.8 13h4.1l2.2-6.2 4.1 12.4 2.4-7.2H21" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span class="brand-text"><strong>Healthcare AIOps</strong><span>Agent console</span></span>
+          </div>
+          <nav class="nav" aria-label="Primary">
+            <p class="nav-label">Operations</p>
+            <span class="nav-item" aria-current="page"><svg class="od-icon i-16"><use href="#i-sev-high"/></svg><span class="nav-text">Incidents</span><span class="nav-count">4</span></span>
+            <span class="nav-item"><svg class="od-icon i-16"><use href="#i-check-square"/></svg><span class="nav-text">Approvals</span><span class="nav-count">1</span></span>
+            <span class="nav-item"><svg class="od-icon i-16"><use href="#i-git"/></svg><span class="nav-text">Problems &amp; Changes</span><span class="nav-count">3</span></span>
+            <span class="nav-item"><svg class="od-icon i-16"><use href="#i-play"/></svg><span class="nav-text">Scenarios</span></span>
+            <span class="nav-item"><svg class="od-icon i-16"><use href="#i-bar-chart"/></svg><span class="nav-text">Evals</span></span>
+            <span class="nav-item"><svg class="od-icon i-16"><use href="#i-list"/></svg><span class="nav-text">Audit</span></span>
+          </nav>
+          <div class="sidebar-foot">
+            <div class="agent-line"><span class="dot" data-tone="warn"></span>replay · recorded runs</div>
+            <div class="agent-line dim">prompt v12 · 2026-11-16</div>
+          </div>
+        </aside>
+
+        <div class="main">
+          <div class="topbar">
+            <span class="env-badge"><svg class="od-icon i-12"><use href="#i-flask"/></svg>DEMO<span> · synthetic data</span></span>
+            <span class="topbar-spacer"></span>
+            <span class="budget" style="cursor:default">
+              <span class="budget-label">LLM budget</span>
+              <span class="budget-track"><span class="budget-fill" data-tone="full" style="width:100%"></span></span>
+              <span class="budget-value">$5.00 / $5.00</span>
+            </span>
+            <span class="role-btn" style="cursor:default"><span class="role-meta"><span class="role-word">Role</span><span class="role-name">Approver</span></span><svg class="od-icon i-12 dim"><use href="#i-chevron-down"/></svg></span>
+            <span class="iconbtn"><svg class="od-icon i-16"><use href="#i-sun"/></svg></span>
+            <span class="avatar">OA</span>
+          </div>
+
+          <div class="content">
+            <div class="replay-banner">
+              <svg class="od-icon i-14"><use href="#i-clock"/></svg>
+              <strong>Daily LLM budget reached — Replay mode</strong>
+              <span>Recorded runs from 2026-11-16 are shown. New investigations resume after the daily cap resets at 00:00.</span>
+              <span class="push"></span>
+              <span class="replay-tag">replay</span>
+            </div>
+
+            <div class="ws-head">
+              <div class="crumb-row"><span class="mono dim sm">INC-1042</span><span class="divider"></span><span class="mono dim sm">recorded 09:18 · 2026-11-16</span></div>
+              <div class="ws-title-row">
+                <h1>Lab results delayed</h1>
+                <span class="sev" data-sev="high"><svg class="od-icon i-12"><use href="#i-sev-high"/></svg>High</span>
+                <span class="tier"><span class="tier-code">T1</span>Tier 1</span>
+                <span class="status" data-status="awaiting"><svg class="od-icon i-12"><use href="#i-lock"/></svg>Awaiting approval</span>
+              </div>
+              <p class="ws-meta"><span>Opened 09:14</span><span class="sep">/</span><span>Root <span class="svc">lis</span></span><span class="sep">/</span><span>Victim <span class="svc">interface-engine</span></span><span class="sep">/</span><span>Owner O. Adirah</span></p>
+            </div>
+
+            <div class="state-grid">
+              <div class="state-stack">
+                <section class="ai-panel">
+                  <div class="ai-head">
+                    <span class="ai-badge"><svg class="od-icon i-14"><use href="#i-sparkle"/></svg>AI findings</span>
+                    <span class="model-tag">ops-agent-3.1 · prompt v12</span>
+                    <span class="spacer"></span>
+                    <span class="replay-tag">recorded</span>
+                  </div>
+                  <div class="findings">
+                    <div class="findings-group">
+                      <div class="find-head">Facts <span class="count">2</span></div>
+                      <div class="fact">
+                        <span class="fact-tag">FACT</span>
+                        <div class="fact-body">
+                          <p>LIS pods restarted <strong>6 times</strong> in 10 min with <span class="mono">OOMKilled</span>.</p>
+                          <div class="evidence-list"><span class="evidence-chip">ev_19c2 <span class="ev-type">· k8s_event</span></span></div>
+                        </div>
+                      </div>
+                      <div class="fact">
+                        <span class="fact-tag">FACT</span>
+                        <div class="fact-body">
+                          <p>Interface engine queue depth rose from <strong>40 to 1,240</strong> starting 09:06.</p>
+                          <div class="evidence-list"><span class="evidence-chip">ev_7f3a <span class="ev-type">· metric</span></span></div>
+                        </div>
+                      </div>
+                    </div>
+                    <article class="hypo">
+                      <div class="hypo-head"><span class="hypo-tag">HYPOTHESIS 1</span><span class="conf" data-conf="high"><span class="conf-bars"><i></i><i></i><i></i></span>High confidence</span></div>
+                      <p><span class="mono">lis</span> memory exhaustion; interface-engine is a downstream victim.</p>
+                      <div class="hypo-ev">
+                        <div><span class="mini-label" data-tone="ok">Supporting · 3</span><div class="evidence-list"><span class="evidence-chip">ev_19c2</span><span class="evidence-chip">ev_7f3a</span><span class="evidence-chip">ev_2b10</span></div></div>
+                        <div><span class="mini-label">Contradicting</span><p class="sm dim">None recorded.</p></div>
+                      </div>
+                    </article>
+                  </div>
+                </section>
+
+                <section class="action-card">
+                  <div class="action-head">
+                    <span class="find-head"><svg class="od-icon i-14" style="color:inherit"><use href="#i-wrench"/></svg>Recommended action · recorded</span>
+                    <span class="spacer"></span>
+                    <span class="risk" data-risk="medium">Risk · medium</span>
+                    <span class="replay-tag">no execution</span>
+                  </div>
+                  <div class="action-body">
+                    <div class="action-mainline"><span class="action-name">restart_deployment</span><span class="action-target">on <span class="svc">lis</span> · clinical-ops · 3 replicas</span></div>
+                    <div class="role-note" data-tone="info"><svg class="od-icon i-14"><use href="#i-lock"/></svg><span>Replay mode is read-only. Approvals are paused until the budget resets.</span></div>
+                    <div class="action-footer">
+                      <button class="btn btn-primary" type="button" aria-disabled="true" disabled>Approve &amp; execute</button>
+                      <button class="btn" type="button" disabled>Review approval record</button>
+                      <span class="push"></span><span class="mono xs dim">APR-77</span>
+                    </div>
+                  </div>
+                </section>
+              </div>
+
+              <aside>
+                <div class="chat">
+                  <div class="chat-head">
+                    <span class="brand-mark" style="width:22px;height:22px;border-radius:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M11.4 3 13 8.5l5.4 1.6L13 11.7 11.4 17 9.7 11.7 4.3 10.1 9.7 8.5 11.4 3Z" stroke="currentColor" stroke-width="1.6"/></svg></span>
+                    <div class="chat-brand"><strong>CopilotKit</strong><span>incident scoped</span></div>
+                    <span class="spacer"></span><span class="chat-scope">INC-1042</span>
+                  </div>
+                  <div class="chat-thread">
+                    <div class="msg"><div class="msg-head"><span class="badge-ai"><svg class="od-icon i-10"><use href="#i-sparkle"/></svg>agent</span>09:20</div><div class="msg-bubble">Because <span class="mono">interface-engine</span> is a downstream victim, not the cause. Its queue rose after LIS restarts began at 09:06. Restarting the engine would clear the queue briefly and leave the memory exhaustion in lis unchanged.</div></div>
+                    <div class="msg msg-user"><div class="msg-head">You · 09:20</div><div class="msg-bubble">Why not restart interface-engine?</div></div>
+                    <div class="msg"><div class="msg-head"><span class="badge-ai"><svg class="od-icon i-10"><use href="#i-sparkle"/></svg>agent</span><span class="replay-tag">recorded</span></div><div class="msg-bubble">Recorded answer. In replay mode the thread is read-only and no new tool calls are made.<div class="msg-answer-note">Evidence only · no actions executed</div></div></div>
+                  </div>
+                  <div class="replay-compose">
+                    <span class="fake-input">Replay mode · chat disabled</span>
+                    <span class="send-btn" style="opacity:.4"><svg class="od-icon i-16"><use href="#i-arrow-up"/></svg></span>
+                  </div>
+                  <div class="chat-foot"><svg class="od-icon i-10"><use href="#i-lock"/></svg>Recorded 2026-11-16 · no new messages</div>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="frame-footer"><span>WORKSPACE</span><span class="sep">/</span><span>INC-1042</span><span class="sep">/</span><span>budget exhausted at 23:58</span><span class="sep">/</span><span>replay banner persists across views</span></div>
+  </section>
+
+  <!-- ============================ 02 AI UNAVAILABLE ============================ -->
+  <section class="frame-block">
+    <div class="frame-caption">
+      <span class="frame-no">02</span>
+      <div>
+        <h2>AI investigation unavailable</h2>
+        <p>Core monitoring never depends on the agent. Alerts, correlation, blast radius and the approval record remain; only findings, hypotheses and chat degrade.</p>
+      </div>
+    </div>
+
+    <div class="frame">
+      <div class="app">
+        <aside class="sidebar">
+          <div class="brand">
+            <span class="brand-mark"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M2.8 13h4.1l2.2-6.2 4.1 12.4 2.4-7.2H21" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span class="brand-text"><strong>Healthcare AIOps</strong><span>Agent console</span></span>
+          </div>
+          <nav class="nav" aria-label="Primary">
+            <p class="nav-label">Operations</p>
+            <span class="nav-item" aria-current="page"><svg class="od-icon i-16"><use href="#i-sev-high"/></svg><span class="nav-text">Incidents</span><span class="nav-count">4</span></span>
+            <span class="nav-item"><svg class="od-icon i-16"><use href="#i-check-square"/></svg><span class="nav-text">Approvals</span><span class="nav-count">1</span></span>
+            <span class="nav-item"><svg class="od-icon i-16"><use href="#i-git"/></svg><span class="nav-text">Problems &amp; Changes</span><span class="nav-count">3</span></span>
+            <span class="nav-item"><svg class="od-icon i-16"><use href="#i-play"/></svg><span class="nav-text">Scenarios</span></span>
+            <span class="nav-item"><svg class="od-icon i-16"><use href="#i-bar-chart"/></svg><span class="nav-text">Evals</span></span>
+            <span class="nav-item"><svg class="od-icon i-16"><use href="#i-list"/></svg><span class="nav-text">Audit</span></span>
+          </nav>
+          <div class="sidebar-foot">
+            <div class="agent-line"><span class="dot" data-tone="bad"></span>agent-svc · unreachable</div>
+            <div class="agent-line dim">monitoring continues · policy v3</div>
+          </div>
+        </aside>
+
+        <div class="main">
+          <div class="topbar">
+            <span class="env-badge"><svg class="od-icon i-12"><use href="#i-flask"/></svg>DEMO<span> · synthetic data</span></span>
+            <span class="topbar-spacer"></span>
+            <span class="budget" style="cursor:default"><span class="budget-label">LLM budget</span><span class="budget-track"><span class="budget-fill" style="width:42%"></span></span><span class="budget-value">$2.10 / $5.00</span></span>
+            <span class="role-btn" style="cursor:default"><span class="role-meta"><span class="role-word">Role</span><span class="role-name">Approver</span></span><svg class="od-icon i-12 dim"><use href="#i-chevron-down"/></svg></span>
+            <span class="iconbtn"><svg class="od-icon i-16"><use href="#i-sun"/></svg></span>
+            <span class="avatar">OA</span>
+          </div>
+
+          <div class="content">
+            <div class="banner" data-tone="warn">
+              <span class="banner-icon"><svg class="od-icon i-14"><use href="#i-shield"/></svg></span>
+              <div><strong>AI investigation unavailable.</strong> Core monitoring continues. Incident data, alerts, correlation and approvals remain available.</div>
+            </div>
+
+            <div class="ws-head">
+              <div class="crumb-row"><span class="mono dim sm">INC-1042</span></div>
+              <div class="ws-title-row">
+                <h1>Lab results delayed</h1>
+                <span class="sev" data-sev="high"><svg class="od-icon i-12"><use href="#i-sev-high"/></svg>High</span>
+                <span class="tier"><span class="tier-code">T1</span>Tier 1</span>
+                <span class="status" data-status="investigating"><svg class="od-icon i-12"><use href="#i-search"/></svg>Investigating</span>
+              </div>
+              <p class="ws-meta"><span>Opened 09:14 · 11 minutes ago</span><span class="sep">/</span><span>Root <span class="svc">lis</span></span><span class="sep">/</span><span>Victim <span class="svc">interface-engine</span></span><span class="sep">/</span><span>Owner O. Adirah</span></p>
+            </div>
+
+            <div class="ws-grid">
+              <div class="ws-col ws-col-left">
+                <section class="panel">
+                  <div class="panel-head"><h2 class="panel-title">Correlated alerts <span class="count">4</span></h2><span class="panel-sub">live</span></div>
+                  <div class="alert-list">
+                    <div class="alert-item"><span class="alert-mark"><svg class="od-icon i-14"><use href="#i-activity"/></svg></span><div><div class="alert-name">InterfaceEngineQueueDepthHigh</div><div class="alert-meta">queue at <b>1,240</b> messages</div></div></div>
+                    <div class="alert-item"><span class="alert-mark"><svg class="od-icon i-14"><use href="#i-activity"/></svg></span><div><div class="alert-name">LISHighErrorRate</div><div class="alert-meta">503s at <b>38%</b></div></div></div>
+                    <div class="alert-item"><span class="alert-mark"><svg class="od-icon i-14"><use href="#i-activity"/></svg></span><div><div class="alert-name">PodCrashLooping</div><div class="alert-meta">lis-7d9f · 6 restarts</div></div></div>
+                    <div class="alert-item"><span class="alert-mark"><svg class="od-icon i-14"><use href="#i-activity"/></svg></span><div><div class="alert-name">OOMKilled</div><div class="alert-meta">lis · exit 137</div></div></div>
+                  </div>
+                </section>
+                <section class="panel">
+                  <div class="panel-head"><h2 class="panel-title">Timeline</h2><span class="panel-sub">monitoring only</span></div>
+                  <ol class="timeline" style="padding-top:10px">
+                    <li class="tl-item"><span class="tl-time">09:06</span><span class="tl-dot" data-kind="alert"><svg class="od-icon i-10"><use href="#i-sev-high"/></svg></span><div class="tl-body"><span class="tl-actor">monitoring</span><p class="tl-text">Queue depth alert fired.</p></div></li>
+                    <li class="tl-item"><span class="tl-time">09:10</span><span class="tl-dot" data-kind="alert"><svg class="od-icon i-10"><use href="#i-sev-high"/></svg></span><div class="tl-body"><span class="tl-actor">monitoring</span><p class="tl-text">OOMKilled recorded for lis.</p></div></li>
+                    <li class="tl-item"><span class="tl-time">09:14</span><span class="tl-dot" data-kind="human"><svg class="od-icon i-10"><use href="#i-user"/></svg></span><div class="tl-body"><span class="tl-actor">human</span><p class="tl-text">INC-1042 opened by on-call.</p></div></li>
+                    <li class="tl-item"><span class="tl-time">09:31</span><span class="tl-dot"><svg class="od-icon i-10"><use href="#i-shield"/></svg></span><div class="tl-body"><span class="tl-actor">system</span><p class="tl-text">Agent call failed. Monitoring stream unaffected.</p></div></li>
+                  </ol>
+                </section>
+              </div>
+
+              <div class="ws-col ws-col-center">
+                <section class="ai-panel">
+                  <div class="ai-head"><span class="ai-badge"><svg class="od-icon i-14"><use href="#i-sparkle"/></svg>AI findings</span><span class="spacer"></span><span class="offline-note"><span class="dot" data-tone="bad"></span>agent-svc unreachable</span></div>
+                  <div class="degraded-panel">
+                    <span class="empty-icon"><svg class="od-icon i-20"><use href="#i-sparkle"/></svg></span>
+                    <h3>AI investigation unavailable. Core monitoring continues.</h3>
+                    <p>Facts, hypotheses and the action card require the agent service. Alert correlation, blast radius and approvals are unaffected.</p>
+                    <p class="mono xs dim">last attempt 09:31:14 · retry scheduled 09:40</p>
+                    <button class="btn" type="button" disabled>Retry now</button>
+                  </div>
+                </section>
+                <section class="panel">
+                  <div class="panel-head"><h2 class="panel-title">Blast radius</h2><span class="panel-sub">from topology</span></div>
+                  <div class="blast-body">
+                    <svg class="blast-svg" viewBox="0 0 520 156" role="img" aria-label="lis is the root, interface-engine is a victim, ehr-api result views are exposed.">
+                      <g class="blast-node" data-node="root"><rect x="8" y="16" width="132" height="52" rx="6"/><text class="node-label" x="20" y="38">lis</text><text class="node-sub" x="20" y="52">ROOT · TIER 1</text></g>
+                      <path class="blast-edge" d="M140 42h42"/><path class="blast-arrow" d="m178 38 6 4-6 4z"/>
+                      <g class="blast-node" data-node="victim"><rect x="186" y="16" width="158" height="52" rx="6"/><text class="node-label" x="198" y="38">interface-engine</text><text class="node-sub" x="198" y="52">VICTIM · TIER 1</text></g>
+                      <path class="blast-edge" d="M344 42h42"/><path class="blast-arrow" d="m382 38 6 4-6 4z"/>
+                      <g class="blast-node" data-node="exposed"><rect x="388" y="16" width="124" height="52" rx="6"/><text class="node-label" x="400" y="38">ehr-api</text><text class="node-sub" x="400" y="52">EXPOSED · TIER 1</text></g>
+                      <path class="blast-edge" d="M450 68v28"/><path class="blast-arrow" d="m446 92 4 6 4-6z"/>
+                      <g class="blast-node" data-node="surface"><rect x="388" y="100" width="124" height="38" rx="6"/><text class="node-label" x="400" y="123" style="font-size:10px">Result views</text></g>
+                    </svg>
+                    <div class="dept-row"><span class="eyebrow">Departments affected</span><span class="dept">Pathology</span><span class="dept">Wards</span><span class="dept">ED</span></div>
+                  </div>
+                </section>
+              </div>
+
+              <aside class="ws-col ws-col-chat">
+                <div class="chat">
+                  <div class="chat-head">
+                    <span class="brand-mark" style="width:22px;height:22px;border-radius:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M11.4 3 13 8.5l5.4 1.6L13 11.7 11.4 17 9.7 11.7 4.3 10.1 9.7 8.5 11.4 3Z" stroke="currentColor" stroke-width="1.6"/></svg></span>
+                    <div class="chat-brand"><strong>CopilotKit</strong><span>incident scoped</span></div>
+                    <span class="spacer"></span><span class="chat-scope">INC-1042</span>
+                  </div>
+                  <div class="chat-unavailable">
+                    <span class="empty-icon"><svg class="od-icon i-20"><use href="#i-sparkle"/></svg></span>
+                    <strong style="font-size:12px;color:var(--text-2)">Copilot is offline</strong>
+                    <p class="sm">Chat needs the agent service. Use alerts, correlation and the approval record while monitoring continues.</p>
+                  </div>
+                  <div class="replay-compose">
+                    <span class="fake-input">Copilot unavailable</span>
+                    <span class="send-btn" style="opacity:.4"><svg class="od-icon i-16"><use href="#i-arrow-up"/></svg></span>
+                  </div>
+                  <div class="chat-foot"><svg class="od-icon i-10"><use href="#i-shield"/></svg>Monitoring data is live · 09:32</div>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="frame-footer"><span>WORKSPACE</span><span class="sep">/</span><span>INC-1042</span><span class="sep">/</span><span>agent-svc down</span><span class="sep">/</span><span>alerts + topology + approvals stay live</span></div>
+  </section>
+
+  <!-- ============================ 03 EMPTY QUEUE ============================ -->
+  <section class="frame-block">
+    <div class="frame-caption">
+      <span class="frame-no">03</span>
+      <div>
+        <h2>Empty queue after filtering</h2>
+        <p>The summary strip keeps its honest totals while the table explains the empty result and offers a reset. No blank panel, no stale rows.</p>
+      </div>
+    </div>
+
+    <div class="frame">
+      <div class="app">
+        <aside class="sidebar">
+          <div class="brand">
+            <span class="brand-mark"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M2.8 13h4.1l2.2-6.2 4.1 12.4 2.4-7.2H21" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span class="brand-text"><strong>Healthcare AIOps</strong><span>Agent console</span></span>
+          </div>
+          <nav class="nav" aria-label="Primary">
+            <p class="nav-label">Operations</p>
+            <span class="nav-item" aria-current="page"><svg class="od-icon i-16"><use href="#i-sev-high"/></svg><span class="nav-text">Incidents</span><span class="nav-count">4</span></span>
+            <span class="nav-item"><svg class="od-icon i-16"><use href="#i-check-square"/></svg><span class="nav-text">Approvals</span><span class="nav-count">1</span></span>
+            <span class="nav-item"><svg class="od-icon i-16"><use href="#i-git"/></svg><span class="nav-text">Problems &amp; Changes</span><span class="nav-count">3</span></span>
+            <span class="nav-item"><svg class="od-icon i-16"><use href="#i-play"/></svg><span class="nav-text">Scenarios</span></span>
+            <span class="nav-item"><svg class="od-icon i-16"><use href="#i-bar-chart"/></svg><span class="nav-text">Evals</span></span>
+            <span class="nav-item"><svg class="od-icon i-16"><use href="#i-list"/></svg><span class="nav-text">Audit</span></span>
+          </nav>
+          <div class="sidebar-foot">
+            <div class="agent-line"><span class="dot" data-tone="ok"></span>agent-svc · ops-agent-3.1</div>
+            <div class="agent-line dim">prompt v12 · policy v3</div>
+          </div>
+        </aside>
+
+        <div class="main">
+          <div class="topbar">
+            <span class="env-badge"><svg class="od-icon i-12"><use href="#i-flask"/></svg>DEMO<span> · synthetic data</span></span>
+            <span class="topbar-spacer"></span>
+            <span class="budget" style="cursor:default"><span class="budget-label">LLM budget</span><span class="budget-track"><span class="budget-fill" style="width:36%"></span></span><span class="budget-value">$1.82 / $5.00</span></span>
+            <span class="role-btn" style="cursor:default"><span class="role-meta"><span class="role-word">Role</span><span class="role-name">Viewer</span></span><svg class="od-icon i-12 dim"><use href="#i-chevron-down"/></svg></span>
+            <span class="iconbtn"><svg class="od-icon i-16"><use href="#i-sun"/></svg></span>
+            <span class="avatar">OA</span>
+          </div>
+
+          <div class="content">
+            <div class="page-head">
+              <div>
+                <p class="eyebrow">Operations</p>
+                <h1>Incident queue</h1>
+                <p class="page-sub">Live view of hospital IT incidents · synthetic tenant <span class="mono">hh-demo-01</span> · last refreshed 09:25.</p>
+              </div>
+              <div class="page-actions"><span class="btn"><svg class="od-icon i-14"><use href="#i-refresh"/></svg>Refresh</span></div>
+            </div>
+
+            <div class="summary-strip">
+              <div class="stat"><div class="stat-top"><span class="stat-label">Open incidents</span></div><div class="stat-value">4<span class="unit">active</span></div><div class="stat-foot">2 resolved in the last 12 hours</div></div>
+              <div class="stat"><div class="stat-top"><span class="stat-label">Awaiting approval</span></div><div class="stat-value">1<span class="unit">request</span></div><div class="stat-foot">APR-77 · expires 12:40</div></div>
+              <div class="stat"><div class="stat-top"><span class="stat-label">Tier-1 services affected</span></div><div class="stat-value">3<span class="unit">of 4</span></div><div class="stat-foot"><span class="mono">lis</span> · <span class="mono">ehr-api</span> · <span class="mono">pacs</span></div></div>
+              <div class="stat"><div class="stat-top"><span class="stat-label">MTTR · last 7 days</span></div><div class="stat-value">42<span class="unit">min</span></div><div class="stat-foot">Median time to mitigation</div></div>
+            </div>
+
+            <div class="filter-bar">
+              <label class="search"><svg class="od-icon i-14"><use href="#i-search"/></svg><span class="sr-only">Search incidents</span><input class="input" type="search" placeholder="Search incidents, services, IDs" value=""></label>
+              <span class="select-wrap"><select aria-label="Severity"><option>Severity: all</option><option selected>Critical</option></select></span>
+              <span class="select-wrap"><select aria-label="Tier"><option>Tier: all</option><option>Tier 1</option></select></span>
+              <span class="select-wrap"><select aria-label="Status"><option>Status: all</option><option selected>Awaiting approval</option></select></span>
+              <span class="select-wrap"><select aria-label="Service"><option>Service: all</option><option selected>ehr-api</option></select></span>
+              <span class="filter-count">0 of 6</span>
+              <span class="btn btn-ghost btn-sm">Clear</span>
+            </div>
+
+            <div class="panel table-panel">
+              <div class="empty-state">
+                <span class="empty-icon"><svg class="od-icon i-20"><use href="#i-search"/></svg></span>
+                <h3>No incidents match these filters</h3>
+                <p>No incident in the demo tenant is critical, Tier 1, awaiting approval with <span class="mono">ehr-api</span> as the root service. The queue has 6 incidents without filters.</p>
+                <span class="btn">Clear filters</span>
+                <p class="mono xs dim" style="margin-top:4px">filters stay in the URL-free local state; the queue keeps its totals</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="frame-footer"><span>QUEUE</span><span class="sep">/</span><span>0 of 6 after filters</span><span class="sep">/</span><span>clear restores the full list</span></div>
+  </section>
+
+  <!-- ============================ 04 STREAMING ============================ -->
+  <section class="frame-block">
+    <div class="frame-caption">
+      <span class="frame-no">04</span>
+      <div>
+        <h2>Findings streaming</h2>
+        <p>While the agent works, the findings panel reserves its final geometry and states which tools are running. Alerts stay readable and the action card is not shown before evidence exists.</p>
+      </div>
+    </div>
+
+    <div class="frame">
+      <div class="app">
+        <aside class="sidebar">
+          <div class="brand">
+            <span class="brand-mark"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M2.8 13h4.1l2.2-6.2 4.1 12.4 2.4-7.2H21" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span class="brand-text"><strong>Healthcare AIOps</strong><span>Agent console</span></span>
+          </div>
+          <nav class="nav" aria-label="Primary">
+            <p class="nav-label">Operations</p>
+            <span class="nav-item" aria-current="page"><svg class="od-icon i-16"><use href="#i-sev-high"/></svg><span class="nav-text">Incidents</span><span class="nav-count">4</span></span>
+            <span class="nav-item"><svg class="od-icon i-16"><use href="#i-check-square"/></svg><span class="nav-text">Approvals</span><span class="nav-count">1</span></span>
+            <span class="nav-item"><svg class="od-icon i-16"><use href="#i-git"/></svg><span class="nav-text">Problems &amp; Changes</span><span class="nav-count">3</span></span>
+            <span class="nav-item"><svg class="od-icon i-16"><use href="#i-play"/></svg><span class="nav-text">Scenarios</span></span>
+            <span class="nav-item"><svg class="od-icon i-16"><use href="#i-bar-chart"/></svg><span class="nav-text">Evals</span></span>
+            <span class="nav-item"><svg class="od-icon i-16"><use href="#i-list"/></svg><span class="nav-text">Audit</span></span>
+          </nav>
+          <div class="sidebar-foot">
+            <div class="agent-line"><span class="dot" data-tone="ok"></span>agent-svc · investigating</div>
+            <div class="agent-line dim">3 tools running · stream 09:18</div>
+          </div>
+        </aside>
+
+        <div class="main">
+          <div class="topbar">
+            <span class="env-badge"><svg class="od-icon i-12"><use href="#i-flask"/></svg>DEMO<span> · synthetic data</span></span>
+            <span class="topbar-spacer"></span>
+            <span class="budget" style="cursor:default"><span class="budget-label">LLM budget</span><span class="budget-track"><span class="budget-fill" style="width:38%"></span></span><span class="budget-value">$1.90 / $5.00</span></span>
+            <span class="role-btn" style="cursor:default"><span class="role-meta"><span class="role-word">Role</span><span class="role-name">Approver</span></span><svg class="od-icon i-12 dim"><use href="#i-chevron-down"/></svg></span>
+            <span class="iconbtn"><svg class="od-icon i-16"><use href="#i-sun"/></svg></span>
+            <span class="avatar">OA</span>
+          </div>
+
+          <div class="content">
+            <div class="ws-head">
+              <div class="crumb-row"><span class="mono dim sm">INC-1042</span><span class="divider"></span><span class="stream-status"><span class="stream-dot"></span>investigation streaming</span></div>
+              <div class="ws-title-row">
+                <h1>Lab results delayed</h1>
+                <span class="sev" data-sev="high"><svg class="od-icon i-12"><use href="#i-sev-high"/></svg>High</span>
+                <span class="tier"><span class="tier-code">T1</span>Tier 1</span>
+                <span class="status" data-status="investigating"><svg class="od-icon i-12"><use href="#i-search"/></svg>Investigating</span>
+              </div>
+              <p class="ws-meta"><span>Opened 09:14 · 11 minutes ago</span><span class="sep">/</span><span>Root <span class="svc">lis</span></span><span class="sep">/</span><span>Victim <span class="svc">interface-engine</span></span><span class="sep">/</span><span>Owner O. Adirah</span></p>
+            </div>
+
+            <div class="ws-grid">
+              <div class="ws-col ws-col-left">
+                <section class="panel">
+                  <div class="panel-head"><h2 class="panel-title">Timeline</h2><span class="panel-sub">live</span></div>
+                  <ol class="timeline" style="padding-top:10px">
+                    <li class="tl-item"><span class="tl-time">09:11</span><span class="tl-dot" data-kind="agent"><svg class="od-icon i-10"><use href="#i-sparkle"/></svg></span><div class="tl-body"><span class="tl-actor">agent-svc</span><p class="tl-text">Correlated 4 alerts; opened investigation.</p></div></li>
+                    <li class="tl-item"><span class="tl-time">09:13</span><span class="tl-dot" data-kind="agent"><svg class="od-icon i-10"><use href="#i-terminal"/></svg></span><div class="tl-body"><span class="tl-actor">tool call</span><p class="tl-text"><span class="mono">k8s.getPodEvents</span> · running</p></div></li>
+                    <li class="tl-item"><span class="tl-time">09:15</span><span class="tl-dot" data-kind="agent"><svg class="od-icon i-10"><use href="#i-terminal"/></svg></span><div class="tl-body"><span class="tl-actor">tool call</span><p class="tl-text"><span class="mono">metrics.query</span> · queued</p></div></li>
+                    <li class="tl-item"><span class="tl-time">09:18</span><span class="tl-dot" data-kind="guardrail"><svg class="od-icon i-10"><use href="#i-shield"/></svg></span><div class="tl-body"><span class="tl-actor">guardrail</span><p class="tl-text">Scanning retrieved log lines as untrusted data.</p></div></li>
+                  </ol>
+                </section>
+                <section class="panel">
+                  <div class="panel-head"><h2 class="panel-title">Correlated alerts <span class="count">4</span></h2><span class="panel-sub">stable</span></div>
+                  <div class="alert-list">
+                    <div class="alert-item"><span class="alert-mark"><svg class="od-icon i-14"><use href="#i-activity"/></svg></span><div><div class="alert-name">InterfaceEngineQueueDepthHigh</div><div class="alert-meta">queue at <b>1,240</b> messages</div></div></div>
+                    <div class="alert-item"><span class="alert-mark"><svg class="od-icon i-14"><use href="#i-activity"/></svg></span><div><div class="alert-name">LISHighErrorRate</div><div class="alert-meta">503s at <b>38%</b></div></div></div>
+                    <div class="alert-item"><span class="alert-mark"><svg class="od-icon i-14"><use href="#i-activity"/></svg></span><div><div class="alert-name">PodCrashLooping</div><div class="alert-meta">lis-7d9f · 6 restarts</div></div></div>
+                  </div>
+                </section>
+              </div>
+
+              <div class="ws-col ws-col-center">
+                <section class="ai-panel">
+                  <div class="ai-head">
+                    <span class="ai-badge"><svg class="od-icon i-14"><use href="#i-sparkle"/></svg>AI findings</span>
+                    <span class="model-tag">ops-agent-3.1 · prompt v12</span>
+                    <span class="spacer"></span>
+                    <span class="stream-status"><span class="stream-dot"></span>streaming</span>
+                  </div>
+                  <div class="findings">
+                    <div class="findings-group">
+                      <div class="find-head">Facts <span class="count">2</span></div>
+                      <div class="skeleton-box">
+                        <div class="skeleton skeleton-label"></div>
+                        <div class="skeleton skeleton-line" style="width:88%"></div>
+                        <div class="skeleton skeleton-line" style="width:34%"></div>
+                      </div>
+                      <div class="skeleton-box">
+                        <div class="skeleton skeleton-label"></div>
+                        <div class="skeleton skeleton-line" style="width:72%"></div>
+                        <div class="skeleton skeleton-line" style="width:26%"></div>
+                      </div>
+                    </div>
+                    <div class="findings-group">
+                      <div class="find-head">Hypotheses</div>
+                      <div class="skeleton-box">
+                        <div class="skeleton skeleton-line" style="width:52%"></div>
+                        <div class="skeleton skeleton-line" style="width:92%"></div>
+                        <div class="skeleton skeleton-line" style="width:64%"></div>
+                      </div>
+                    </div>
+                    <div class="stream-row" style="display:flex;align-items:center;gap:7px">
+                      <span class="stream-dot"></span>
+                      <span class="mono xs dim">2 of 3 tools complete · k8s.getPodEvents, metrics.query · guardrail scan running</span>
+                    </div>
+                  </div>
+                </section>
+                <section class="panel">
+                  <div class="panel-head"><h2 class="panel-title">Proposed action</h2><span class="panel-sub">held until evidence is complete</span></div>
+                  <div class="panel-body">
+                    <div class="skeleton skeleton-line" style="width:34%;height:13px;margin-bottom:10px"></div>
+                    <div class="skeleton skeleton-line" style="width:76%;margin-bottom:7px"></div>
+                    <div class="skeleton skeleton-line" style="width:58%"></div>
+                    <p class="sm dim" style="margin-top:10px">No approval request exists yet. The agent cannot propose an action before facts and hypotheses are committed.</p>
+                  </div>
+                </section>
+              </div>
+
+              <aside class="ws-col ws-col-chat">
+                <div class="chat">
+                  <div class="chat-head">
+                    <span class="brand-mark" style="width:22px;height:22px;border-radius:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M11.4 3 13 8.5l5.4 1.6L13 11.7 11.4 17 9.7 11.7 4.3 10.1 9.7 8.5 11.4 3Z" stroke="currentColor" stroke-width="1.6"/></svg></span>
+                    <div class="chat-brand"><strong>CopilotKit</strong><span>incident scoped</span></div>
+                    <span class="spacer"></span><span class="chat-scope">INC-1042</span>
+                  </div>
+                  <div class="chat-thread">
+                    <div class="msg"><div class="msg-head"><span class="badge-ai"><svg class="od-icon i-10"><use href="#i-sparkle"/></svg>agent</span>09:18</div><div class="msg-bubble">Investigation in progress. I'll answer from evidence as soon as the fact set is committed.<div class="msg-answer-note">Evidence only · no actions executed</div></div></div>
+                    <div class="msg thinking"><div class="msg-head"><span class="badge-ai"><svg class="od-icon i-10"><use href="#i-sparkle"/></svg>agent</span>working</div><div class="msg-bubble" aria-label="Agent is investigating"><span class="thinking-dot"></span><span class="thinking-dot"></span><span class="thinking-dot"></span></div></div>
+                  </div>
+                  <div class="chat-suggest"><span class="btn btn-sm" style="pointer-events:none;opacity:.5">Why not restart interface-engine?</span></div>
+                  <div class="replay-compose">
+                    <span class="fake-input">Available after the fact set commits</span>
+                    <span class="send-btn" style="opacity:.4"><svg class="od-icon i-16"><use href="#i-arrow-up"/></svg></span>
+                  </div>
+                  <div class="chat-foot"><svg class="od-icon i-10"><use href="#i-lock"/></svg>Read-only · answers cite incident evidence</div>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="frame-footer"><span>WORKSPACE</span><span class="sep">/</span><span>INC-1042</span><span class="sep">/</span><span>agent streaming</span><span class="sep">/</span><span>action withheld until evidence commits</span></div>
+  </section>
+</main>
+
+</body>
+</html>

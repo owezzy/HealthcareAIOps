@@ -58,20 +58,34 @@ This protocol applies when ending a Beads implementation workflow. It is subordi
 <!-- END BEADS INTEGRATION -->
 
 
+## Project map (read first)
+
+- **What and why:** `docs/explanation/healthcare-aiops-plan.md`. **How the code is organised:** `docs/explanation/architecture.md` (start with its "Where does X go?" table). **Decisions:** `docs/adr/`.
+- Scenario ground truth: `sim/services.yaml`, `sim/scenarios/*.yaml`. Shared schemas: `packages/contracts` (`aiops_contracts`).
+- Frontend: `apps/web` (Angular 22, Fuse template). New screens go in `src/app/features/<feature>/`; do not edit `src/@fuse`. UI spec: `docs/design/frontend-design.md`; mockups: `docs/design/mockups/index.html`.
+
 ## Build & Test
 
-_Add your build and test commands here_
+All commands live in the root `Makefile`:
 
 ```bash
-# Example:
-# npm install
-# npm test
+make install   # uv sync + npm ci for the runtime and web app
+make dev       # agent :8123 + runtime :4000 + web :5173 together (Ctrl-C stops all)
+make test      # Python tests
+make lint      # ruff + runtime typecheck
+make check     # lint + test + Angular build (what CI runs)
+make help      # every target, incl. agent/runtime/web/api individually
 ```
 
-## Architecture Overview
+## Conventions
 
-_Add a brief overview of your project architecture_
+- **Git flow:** work on `feature/<name>` from `develop`; never commit to `main` directly. Releases: `docs/how-to/cut-a-release.md`.
+- **Commits:** Conventional Commits, enforced by the `commit-msg` hook (Commitizen). Version and changelog via `uv run cz bump`.
+- **Docs:** Diátaxis layout under `docs/` (index: `docs/README.md`). Update reference pages when you change make targets, env vars or endpoints.
 
-## Conventions & Patterns
+## Non-negotiable invariants
 
-_Add your project-specific conventions here_
+- The agent never gets an execution tool; only `services/executor` executes approved actions (ADR-0002).
+- Blast radius and correlation are deterministic code, not LLM output (ADR-0005).
+- Services never import each other; they share `aiops_contracts` only. Inner layers (`domain`, `use_cases`) never import frameworks or adapters (ADR-0011).
+- Synthetic data only. No patient data, ever.

@@ -1,0 +1,5 @@
+if [ -x .beads/hooks/pre-commit ]; then
+  .beads/hooks/pre-commit "$@"
+fi
+
+npx lint-staged

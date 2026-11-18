@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>Healthcare AIOps Agent — Component sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+@layer od-layout {
+  [hidden]:not([hidden="until-found" i]) { display: none !important; }
+  dialog:not([open]) { display: none !important; }
+  :where(.od-stack,.od-row,.od-row-top,.od-cluster,.od-grid,.od-field,.od-stat,.od-cell,.od-tile) > :where(*) { min-width: 0; }
+  .od-row { display: flex; align-items: center; gap: var(--od-gap, 8px); }
+  .od-icon { display: inline-block; inline-size: var(--od-icon-size, 1em); block-size: var(--od-icon-size, 1em); flex: none; }
+  .od-truncate { display: block; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .od-nowrap { white-space: nowrap; }
+}
+:root [hidden]:where(:not([hidden="until-found" i])) { display: none; }
+</style>
+<link rel="stylesheet" href="assets/console.css">
+<link rel="stylesheet" href="assets/boards.css">
+<style>
+/* Sheet grids: keep rows full at 1440 so notes have room to breathe */
+.spec-grid.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.spec-grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 1100px) {
+  .spec-grid.four, .spec-grid.three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  .spec-grid.four, .spec-grid.three { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body class="board-page">
+
+<svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+  <defs>
+    <symbol id="i-sev-critical" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.2 2.5h7.6l5.7 5.7v7.6l-5.7 5.7H8.2l-5.7-5.7V8.2l5.7-5.7Z"/><path d="M12 7.5v5"/><path d="M12 16.2h.01"/></symbol>
+    <symbol id="i-sev-high" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 2.5 17.4A2 2 0 0 0 4.2 20.4h15.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+    <symbol id="i-sev-medium" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.6 21.4 12 12 21.4 2.6 12 12 2.6Z"/><path d="M12 7.8v4.6"/><path d="M12 16.2h.01"/></symbol>
+    <symbol id="i-sev-low" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.4"/></symbol>
+    <symbol id="i-tier" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 8.5 4.7L12 12.4 3.5 7.7 12 3Z"/><path d="m3.5 12 8.5 4.7 8.5-4.7"/><path d="m3.5 16.3 8.5 4.7 8.5-4.7"/></symbol>
+    <symbol id="i-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10" width="15" height="10" rx="2"/><path d="M8 10V7.2a4 4 0 0 1 8 0V10"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.8"/><path d="m16.2 16.2 4.3 4.3"/></symbol>
+    <symbol id="i-shield-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.8 20 6v6c0 5-3.4 8.3-8 9.2C7.4 20.3 4 17 4 12V6l8-3.2Z"/><path d="m8.6 12 2.4 2.4 4.4-4.8"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.8 20 6v6c0 5-3.4 8.3-8 9.2C7.4 20.3 4 17 4 12V6l8-3.2Z"/></symbol>
+    <symbol id="i-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.7 2.7L16.4 9"/></symbol>
+    <symbol id="i-x-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6"/><path d="m15 9-6 6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.2 4.2L19 6.8"/></symbol>
+    <symbol id="i-sparkle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M11.4 3 13 8.5l5.4 1.6L13 11.7 11.4 17 9.7 11.7 4.3 10.1 9.7 8.5 11.4 3Z"/><path d="M18.6 14.5 19.4 17l2.4.8-2.4.8-.8 2.4-.8-2.4-2.4-.8 2.4-.8.8-2.5Z"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.7"/><path d="M12 7.2v5.2l3.2 1.9"/></symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9.5 6 6 6-6"/></symbol>
+    <symbol id="i-wrench" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.6 6.2a4.6 4.6 0 0 0-5.9 5.9L3.4 17.4a1.8 1.8 0 0 0 0 2.5l.7.7a1.8 1.8 0 0 0 2.5 0l5.3-5.3a4.6 4.6 0 0 0 5.9-5.9l-2.6 2.6-2.6-2.6 2-3.2Z"/></symbol>
+    <symbol id="i-activity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h3.8l2.4-7 4 14 2.5-7H21"/></symbol>
+    <symbol id="i-flask" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9.2 3h5.6"/><path d="M10 3v5.2l-5.6 9.4A2 2 0 0 0 6.2 20.7h11.6a2 2 0 0 0 1.8-3.1L14 8.2V3"/><path d="M7.4 15h9.2"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.8"/><path d="M4.5 20.5c0-4.2 3.4-6.4 7.5-6.4s7.5 2.2 7.5 6.4"/></symbol>
+  </defs>
+</svg>
+
+<main class="board">
+  <header class="board-head">
+    <div>
+      <p class="eyebrow">Healthcare AIOps Agent · design artifacts</p>
+      <h1>Component sheet</h1>
+      <p class="board-sub">The console's reusable parts with their states, pairings and usage rules. Every sample uses the INC-1042 dataset so the sheet matches the live screens; tokens and geometry come from <span class="mono">assets/console.css</span>.</p>
+    </div>
+    <div class="board-meta">
+      <span class="tag-pill">1440 px</span>
+      <span class="tag-pill">21 specs</span>
+      <span class="tag-pill">dark + light</span>
+      <span class="tag-pill">WCAG AA</span>
+    </div>
+  </header>
+
+  <!-- ============================ 01 TOKENS ============================ -->
+  <section class="spec-section">
+    <div class="spec-section-head">
+      <h2>01 · Colour tokens</h2>
+      <p>Colour carries severity, risk and state only. Everything else is neutral graphite; the teal accent marks focus, links and agent provenance.</p>
+    </div>
+
+    <div class="swatches">
+      <div class="swatch"><div class="swatch-chip" style="background:var(--sev-critical)"></div><div class="swatch-meta"><strong>Critical</strong><code>--sev-critical</code></div></div>
+      <div class="swatch"><div class="swatch-chip" style="background:var(--sev-high)"></div><div class="swatch-meta"><strong>High</strong><code>--sev-high</code></div></div>
+      <div class="swatch"><div class="swatch-chip" style="background:var(--sev-medium)"></div><div class="swatch-meta"><strong>Medium</strong><code>--sev-medium</code></div></div>
+      <div class="swatch"><div class="swatch-chip" style="background:var(--sev-low)"></div><div class="swatch-meta"><strong>Low</strong><code>--sev-low</code></div></div>
+      <div class="swatch"><div class="swatch-chip" style="background:var(--ok)"></div><div class="swatch-meta"><strong>Verified / resolved</strong><code>--ok</code></div></div>
+      <div class="swatch"><div class="swatch-chip" style="background:var(--accent)"></div><div class="swatch-meta"><strong>Focus / agent</strong><code>--accent</code></div></div>
+      <div class="swatch"><div class="swatch-chip" style="background:var(--line-2)"></div><div class="swatch-meta"><strong>Hairline</strong><code>--line-2</code></div></div>
+      <div class="swatch"><div class="swatch-chip" style="background:var(--panel-2);border-bottom:1px solid var(--line)"></div><div class="swatch-meta"><strong>Panel</strong><code>--panel-2</code></div></div>
+    </div>
+  </section>
+
+  <!-- ============================ 02 TRIAGE ============================ -->
+  <section class="spec-section">
+    <div class="spec-section-head">
+      <h2>02 · Triage labels</h2>
+      <p>Severity, tier and status never travel alone: each pairs an icon or code with a word, and each has a distinct shape as well as colour.</p>
+    </div>
+
+    <div class="spec-grid four">
+      <div class="spec">
+        <div class="spec-label"><span>Severity</span><span class="spec-id">C-01</span></div>
+        <div class="spec-demo stack">
+          <span class="sev" data-sev="critical"><svg class="od-icon i-12" aria-hidden="true"><use href="#i-sev-critical"/></svg>Critical</span>
+          <span class="sev" data-sev="high"><svg class="od-icon i-12" aria-hidden="true"><use href="#i-sev-high"/></svg>High</span>
+          <span class="sev" data-sev="medium"><svg class="od-icon i-12" aria-hidden="true"><use href="#i-sev-medium"/></svg>Medium</span>
+          <span class="sev" data-sev="low"><svg class="od-icon i-12" aria-hidden="true"><use href="#i-sev-low"/></svg>Low</span>
+        </div>
+        <p class="spec-note">Distinct glyph per level (octagon, triangle, diamond, target). Never remove the label text — the shape and word survive colour blindness and greyscale print.</p>
+      </div>
+
+      <div class="spec">
+        <div class="spec-label"><span>Service tier</span><span class="spec-id">C-02</span></div>
+        <div class="spec-demo stack">
+          <span class="tier"><span class="tier-code">T1</span>Tier 1 · clinical</span>
+          <span class="tier"><span class="tier-code">T2</span>Tier 2 · supporting</span>
+          <span class="tier"><span class="tier-code">T3</span>Tier 3 · office</span>
+          <span class="tier" data-tier="infra"><span class="tier-code">—</span>Infra</span>
+        </div>
+        <p class="spec-note">Neutral by design: tier is context, not urgency. Infra uses a dashed border because it sits outside the clinical tier ladder. Codes are monospace for scanability.</p>
+      </div>
+
+      <div class="spec">
+        <div class="spec-label"><span>Incident status</span><span class="spec-id">C-03</span></div>
+        <div class="spec-demo stack">
+          <span class="status"><svg class="od-icon i-12" aria-hidden="true"><use href="#i-circle"/></svg>Open</span>
+          <span class="status" data-status="investigating"><svg class="od-icon i-12" aria-hidden="true"><use href="#i-search"/></svg>Investigating</span>
+          <span class="status" data-status="awaiting"><svg class="od-icon i-12" aria-hidden="true"><use href="#i-lock"/></svg>Awaiting approval</span>
+          <span class="status" data-status="mitigated"><svg class="od-icon i-12" aria-hidden="true"><use href="#i-shield-check"/></svg>Mitigated</span>
+          <span class="status" data-status="rejected"><svg class="od-icon i-12" aria-hidden="true"><use href="#i-x-circle"/></svg>Rejected</span>
+        </div>
+        <p class="spec-note">Pill shape separates human workflow state from the sharper severity badge. “Awaiting approval” is the only status allowed the amber treatment.</p>
+      </div>
+
+      <div class="spec">
+        <div class="spec-label"><span>In context</span><span class="spec-id">C-04</span></div>
+        <div class="spec-demo stack">
+          <div class="item-meta">
+            <span class="sev" data-sev="high"><svg class="od-icon i-12" aria-hidden="true"><use href="#i-sev-high"/></svg>High</span>
+            <span class="tier"><span class="tier-code">T1</span>Tier 1</span>
+            <span class="status" data-status="awaiting"><svg class="od-icon i-12" aria-hidden="true"><use href="#i-lock"/></svg>Awaiting approval</span>
+          </div>
+          <div class="item-meta">
+            <span class="origin-chip">INC-1042</span>
+            <span class="mini-pill">lis</span>
+            <span class="mini-pill">3 replicas</span>
+            <span class="mini-pill">requested by agent-svc</span>
+          </div>
+        </div>
+        <p class="spec-note">Order is always severity → tier → status, then identifiers in mono. Mini-pills are machine metadata and never compete with triage labels.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ 03 LIFECYCLE ============================ -->
+  <section class="spec-section">
+    <div class="spec-section-head">
+      <h2>03 · Incident lifecycle stepper</h2>
+      <p>One horizontal rail, six fixed states. Completed steps show a check, the current step is outlined and labelled with <span class="mono">aria-current="step"</span>, future steps are numbered.</p>
+    </div>
+
+    <div class="spec">
+      <div class="spec-label"><span>Awaiting approval · INC-1042</span><span class="spec-id">C-05</span></div>
+      <div class="spec-demo" style="display:block;padding:14px 12px">
+        <ol class="stepper" aria-label="Incident status: awaiting approval">
+          <li class="step" data-step="open" data-state="done"><span class="step-dot"><svg class="od-icon i-10" aria-hidden="true"><use href="#i-check"/></svg></span>Open</li>
+          <span class="step-line" aria-hidden="true"></span>
+          <li class="step" data-step="investigating" data-state="done"><span class="step-dot"><svg class="od-icon i-10" aria-hidden="true"><use href="#i-check"/></svg></span>Investigating</li>
+          <span class="step-line" aria-hidden="true"></span>
+          <li class="step" data-step="awaiting" data-state="current" aria-current="step"><span class="step-dot"><svg class="od-icon i-10" aria-hidden="true"><use href="#i-lock"/></svg></span>Awaiting approval</li>
+          <span class="step-line" aria-hidden="true"></span>
+          <li class="step" data-step="mitigating"><span class="step-dot"><span class="num">4</span></span>Mitigating</li>
+          <span class="step-line" aria-hidden="true"></span>
+          <li class="step" data-step="mitigated"><span class="step-dot"><span class="num">5</span></span>Mitigated</li>
+          <span class="step-line" aria-hidden="true"></span>
+          <li class="step" data-step="resolved"><span class="step-dot"><span class="num">6</span></span>Resolved</li>
+        </ol>
+      </div>
+      <p class="spec-note">The rail scrolls horizontally rather than wrapping, so step order never breaks at narrow widths. Current step gets a soft accent ring — the only glow in the system.</p>
+    </div>
+
+    <div class="spec" style="margin-top:12px">
+      <div class="spec-label"><span>Resolved · all steps complete</span><span class="spec-id">C-05b</span></div>
+      <div class="spec-demo" style="display:block;padding:14px 12px">
+        <ol class="stepper" aria-label="Incident status: resolved">
+          <li class="step" data-state="done"><span class="step-dot"><svg class="od-icon i-10" aria-hidden="true"><use href="#i-check"/></svg></span>Open</li>
+          <span class="step-line" aria-hidden="true"></span>
+          <li class="step" data-state="done"><span class="step-dot"><svg class="od-icon i-10" aria-hidden="true"><use href="#i-check"/></svg></span>Investigating</li>
+          <span class="step-line" aria-hidden="true"></span>
+          <li class="step" data-state="done"><span class="step-dot"><svg class="od-icon i-10" aria-hidden="true"><use href="#i-check"/></svg></span>Awaiting approval</li>
+          <span class="step-line" aria-hidden="true"></span>
+          <li class="step" data-state="done"><span class="step-dot"><svg class="od-icon i-10" aria-hidden="true"><use href="#i-check"/></svg></span>Mitigating</li>
+          <span class="step-line" aria-hidden="true"></span>
+          <li class="step" data-state="done"><span class="step-dot"><svg class="od-icon i-10" aria-hidden="true"><use href="#i-check"/></svg></span>Mitigated</li>
+          <span class="step-line" aria-hidden="true"></span>
+          <li class="step" data-state="current" aria-current="step"><span class="step-dot"><svg class="od-icon i-10" aria-hidden="true"><use href="#i-check"/></svg></span>Resolved</li>
+        </ol>
+      </div>
+      <p class="spec-note">Completion is carried by checks and labels, not a green wash. The final step stays current until the incident closes, so the rail always has one unambiguous position.</p>
+    </div>
+  </section>
+
+  <!-- ============================ 04 EVIDENCE & PROVENANCE ============================ -->
+  <section class="spec-section">
+    <div class="spec-section-head">
+      <h2>04 · Evidence &amp; AI provenance</h2>
+      <p>Every AI statement is traceable. Evidence chips open the drawer; the AI header always names the model and prompt version.</p>
+    </div>
+
+    <div class="spec-grid four">
+      <div class="spec">
+        <div class="spec-label"><span>Evidence chip</span><span class="spec-id">C-06</span></div>
+        <div class="spec-demo stack">
+          <button class="evidence-chip" type="button">ev_7f3a</button>
+          <button class="evidence-chip" type="button">ev_19c2 <span class="ev-type">· k8s_event</span></button>
+          <button class="evidence-chip" type="button">ev_44de <span class="ev-type">· config_diff</span></button>
+          <button class="evidence-chip" type="button" aria-expanded="true">ev_9a01 <span class="ev-type">· log</span></button>
+        </div>
+        <p class="spec-note">Default, typed, and open states. The ID is mono and stable; the type suffix is optional where space is tight. Hover and focus use the accent — never a severity colour.</p>
+      </div>
+
+      <div class="spec">
+        <div class="spec-label"><span>Confidence pill</span><span class="spec-id">C-07</span></div>
+        <div class="spec-demo stack">
+          <span class="conf" data-conf="high"><span class="conf-bars" aria-hidden="true"><i></i><i></i><i></i></span>High confidence</span>
+          <span class="conf" data-conf="medium"><span class="conf-bars" aria-hidden="true"><i></i><i></i><i></i></span>Medium confidence</span>
+          <span class="conf" data-conf="low"><span class="conf-bars" aria-hidden="true"><i></i><i></i><i></i></span>Low confidence</span>
+        </div>
+        <p class="spec-note">Three filled bars encode level redundantly with the word. High is green, medium amber, low neutral — low is deliberately quiet, not alarming.</p>
+      </div>
+
+      <div class="spec">
+        <div class="spec-label"><span>Streaming state</span><span class="spec-id">C-08</span></div>
+        <div class="spec-demo stack">
+          <span class="ai-badge"><svg class="od-icon i-14" aria-hidden="true"><use href="#i-sparkle"/></svg>AI findings</span>
+          <span class="ai-stream" style="color:var(--accent)">streaming · 2 of 4 facts committed</span>
+          <span class="mini-pill">action withheld until evidence commits</span>
+        </div>
+        <p class="spec-note">While streaming, findings render as labelled skeletons. The recommendation card does not appear until the fact set is committed, so no action is ever offered against partial evidence.</p>
+      </div>
+
+      <div class="spec">
+        <div class="spec-label"><span>Provenance header</span><span class="spec-id">C-09</span></div>
+        <div class="ai-panel">
+          <div class="ai-head" style="border-bottom:0">
+            <span class="ai-badge"><svg class="od-icon i-14" aria-hidden="true"><use href="#i-sparkle"/></svg>AI findings</span>
+            <span class="model-tag">ops-agent-3.1 · prompt v12</span>
+            <span class="spacer"></span>
+            <span class="ai-stream">streamed 09:18</span>
+          </div>
+        </div>
+        <p class="spec-note">Model and prompt version are mandatory and monospace. “streamed” is the timestamp of the run, not the view — re-opening the incident does not reset it.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ 05 FINDINGS HIERARCHY ============================ -->
+  <section class="spec-section">
+    <div class="spec-section-head">
+      <h2>05 · Findings hierarchy</h2>
+      <p>Facts, hypotheses and recommendations are three different objects with three different containers. A clinician can tell which is which without reading.</p>
+    </div>
+
+    <div class="spec-grid four">
+      <div class="spec">
+        <div class="spec-label"><span>Fact row</span><span class="spec-id">C-10</span></div>
+        <div class="spec-demo stack">
+          <div class="fact">
+            <span class="fact-tag">FACT</span>
+            <div class="fact-body">
+              <p>LIS pods restarted <strong>6 times</strong> in 10 min with <span class="mono">OOMKilled</span>.</p>
+              <div class="evidence-list">
+                <button class="evidence-chip" type="button">ev_19c2 <span class="ev-type">· k8s_event</span></button>
+              </div>
+            </div>
+          </div>
+          <div class="fact">
+            <span class="fact-tag">FACT</span>
+            <div class="fact-body">
+              <p>Interface engine queue rose from <strong>40 to 1,240</strong> starting 09:06.</p>
+              <div class="evidence-list">
+                <button class="evidence-chip" type="button">ev_7f3a <span class="ev-type">· metric</span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="spec-note">Solid card, flat fill, own evidence row. Facts carry no confidence pill — they are observed, not inferred, and must be true of raw telemetry.</p>
+      </div>
+
+      <div class="spec">
+        <div class="spec-label"><span>Hypothesis · supported</span><span class="spec-id">C-11</span></div>
+        <div class="spec-demo stack">
+          <article class="hypo">
+            <div class="hypo-head">
+              <span class="hypo-tag">HYPOTHESIS 1</span>
+              <span class="conf" data-conf="high"><span class="conf-bars" aria-hidden="true"><i></i><i></i><i></i></span>High confidence</span>
+            </div>
+            <p><span class="mono">lis</span> memory exhaustion (<span class="mono">resource_exhaustion</span>); interface-engine is a downstream victim.</p>
+            <div class="hypo-ev">
+              <div>
+                <span class="mini-label" data-tone="ok">Supporting · 3</span>
+                <div class="evidence-list">
+                  <button class="evidence-chip" type="button">ev_19c2</button>
+                  <button class="evidence-chip" type="button">ev_7f3a</button>
+                  <button class="evidence-chip" type="button">ev_2b10</button>
+                </div>
+              </div>
+              <div>
+                <span class="mini-label">Contradicting</span>
+                <p class="sm dim">None recorded.</p>
+              </div>
+            </div>
+          </article>
+        </div>
+        <p class="spec-note">Outlined card plus a confidence pill. Supporting and contradicting evidence are always shown as two columns, even when one side is empty — silence is information.</p>
+      </div>
+
+      <div class="spec">
+        <div class="spec-label"><span>Hypothesis · contradicted</span><span class="spec-id">C-11b</span></div>
+        <div class="spec-demo stack">
+          <article class="hypo" data-tone="weak">
+            <div class="hypo-head">
+              <span class="hypo-tag">HYPOTHESIS 2</span>
+              <span class="conf" data-conf="low"><span class="conf-bars" aria-hidden="true"><i></i><i></i><i></i></span>Low confidence</span>
+            </div>
+            <p><span class="mono">interface-engine</span> misconfiguration.</p>
+            <div class="hypo-ev">
+              <div>
+                <span class="mini-label">Supporting</span>
+                <p class="sm dim">None recorded.</p>
+              </div>
+              <div>
+                <span class="mini-label" data-tone="bad">Contradicting · 1</span>
+                <div class="evidence-list">
+                  <button class="evidence-chip" type="button">ev_44de <span class="ev-type">· config_diff</span></button>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+        <p class="spec-note">Weak hypotheses lose the fill and keep the border. A rejected hypothesis stays on screen with its counter-evidence rather than disappearing — the reasoning trail is the product.</p>
+      </div>
+
+      <div class="spec">
+        <div class="spec-label"><span>Gaps &amp; guardrails</span><span class="spec-id">C-12</span></div>
+        <div class="spec-demo stack">
+          <div class="missing">
+            <div>
+              <span class="mini-label">Missing information</span>
+              <p>No heap profile available for <span class="mono">lis</span>.</p>
+            </div>
+            <span class="mini-pill">limits certainty</span>
+          </div>
+          <div class="injection">
+            <svg class="od-icon i-16" aria-hidden="true"><use href="#i-shield"/></svg>
+            <div>
+              <strong>Prompt injection — treated as data</strong>
+              <p>Log line instructed a restart of all services. Guardrail flagged it, ignored it, excluded it from tools.</p>
+              <div class="evidence-list">
+                <button class="evidence-chip" type="button">ev_9a01 <span class="ev-type">· log</span></button>
+                <span class="mini-pill">detected 09:16:03</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="spec-note">Dashed border means “absent”, red border means “hostile input contained”. Both are shown beside the findings, never in a toast that disappears.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ 06 ACTION & APPROVAL ============================ -->
+  <section class="spec-section">
+    <div class="spec-section-head">
+      <h2>06 · Action &amp; approval</h2>
+      <p>The recommendation is the only accent-tinted card on the surface. It is inert until a human with the right role approves it.</p>
+    </div>
+
+    <div class="spec-grid three">
+      <div class="spec spec-wide">
+        <div class="spec-label"><span>Recommended action · APR-77</span><span class="spec-id">C-13</span></div>
+        <div class="spec-demo" style="display:block;padding:0;border:0;background:transparent">
+          <section class="action-card" aria-labelledby="sheet-action-title">
+            <div class="action-head">
+              <span class="find-head" id="sheet-action-title"><svg class="od-icon i-14" aria-hidden="true"><use href="#i-wrench"/></svg>Recommended action</span>
+              <span class="spacer"></span>
+              <span class="risk" data-risk="medium"><svg class="od-icon i-12" aria-hidden="true"><use href="#i-shield"/></svg>Risk · medium</span>
+              <span class="countdown"><svg class="od-icon i-12" aria-hidden="true"><use href="#i-clock"/></svg><span class="countdown-value">12:40</span></span>
+            </div>
+            <div class="action-body">
+              <div class="action-mainline">
+                <span class="action-name">restart_deployment</span>
+                <span class="action-target">on <span class="svc">lis</span> · clinical-ops · 3 replicas</span>
+              </div>
+              <dl class="kv-grid">
+                <dt>Rationale</dt>
+                <dd>Memory exhaustion is causing OOMKilled restarts; a rollout restart clears crashed pods and re-queues workers. Cites <button class="evidence-chip" type="button">ev_19c2 <span class="ev-type">· k8s_event</span></button></dd>
+                <dt>Expected</dt>
+                <dd>Queue drains within 5 min; LIS 503 rate returns below 1%.</dd>
+                <dt>Rollback</dt>
+                <dd>None needed; restart is stateless.</dd>
+                <dt>Follow-up</dt>
+                <dd>Open Problem PRB-208 for the <span class="mono">lis</span> memory limit.</dd>
+                <dt>Evidence</dt>
+                <dd><div class="evidence-list">
+                  <button class="evidence-chip" type="button">ev_19c2</button>
+                  <button class="evidence-chip" type="button">ev_7f3a</button>
+                  <button class="evidence-chip" type="button">ev_2b10</button>
+                </div></dd>
+              </dl>
+              <div class="action-footer">
+                <button class="btn btn-primary" type="button" disabled style="opacity:.55;cursor:not-allowed"><svg class="od-icon i-14" aria-hidden="true"><use href="#i-shield-check"/></svg>Approve &amp; execute</button>
+                <button class="btn" type="button">Review approval record</button>
+                <span class="push"></span>
+                <span class="mono xs dim">APR-77</span>
+              </div>
+            </div>
+          </section>
+        </div>
+        <p class="spec-note">Primary button shown disabled for Viewer/Operator roles; Approver enables it. The card never hides the rollback or follow-up to look confident, and the countdown is part of the card, not a separate banner.</p>
+      </div>
+
+      <div class="spec">
+        <div class="spec-label"><span>Approval countdown</span><span class="spec-id">C-14</span></div>
+        <div class="spec-demo stack">
+          <span class="approval-countdown"><svg class="od-icon i-12" aria-hidden="true"><use href="#i-clock"/></svg>expires in <span class="countdown-value">12:40</span></span>
+          <span class="countdown" data-tone="warn"><svg class="od-icon i-12" aria-hidden="true"><use href="#i-clock"/></svg><span class="countdown-value">00:48</span></span>
+          <span class="mini-pill">expires → re-request required</span>
+        </div>
+        <p class="spec-note">Amber under 15 minutes, critical under one. Countdowns tick locally in the demo; production reads server expiry so two approvers never disagree on the deadline.</p>
+      </div>
+
+      <div class="spec">
+        <div class="spec-label"><span>Approval outcome banners</span><span class="spec-id">C-15</span></div>
+        <div class="spec-demo stack" style="padding:0;border:0;background:transparent">
+          <div class="approval-status-banner">
+            <svg class="od-icon i-14" aria-hidden="true"><use href="#i-check-circle"/></svg>
+            Executed 09:25 · verification passed · audit recorded
+          </div>
+          <div class="approval-status-banner" style="background:var(--sev-critical-bg);color:var(--sev-critical-text)">
+            <svg class="od-icon i-14" aria-hidden="true"><use href="#i-x-circle"/></svg>
+            Rejected · reason recorded in the audit log
+          </div>
+          <div class="hash-row">
+            <span class="hash-value">9f2c4e1a7b0d63f5…1e4d7b9f</span>
+          </div>
+        </div>
+        <p class="spec-note">Outcome is announced once, at the top of the approval detail, and mirrored to the audit row. The hash is truncated for display but expands to the full 64 characters.</p>
+      </div>
+
+      <div class="spec spec-wide">
+        <div class="spec-label"><span>Role notes</span><span class="spec-id">C-16</span></div>
+        <div class="spec-demo stack">
+          <div class="role-note" data-tone="info">
+            <svg class="od-icon i-14" aria-hidden="true"><use href="#i-user"/></svg>
+            You are viewing as <strong>Operator</strong>. Investigation is open; approval requires an Approver.
+          </div>
+          <div class="role-note" data-tone="deny">
+            <svg class="od-icon i-14" aria-hidden="true"><use href="#i-lock"/></svg>
+            Viewer role cannot approve. Switch to Approver to grant this action.
+          </div>
+        </div>
+        <p class="spec-note">Gating is explained where the button lives, not only in a toast. Denied attempts are still written to the audit log with role and timestamp.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ 07 CHROME ============================ -->
+  <section class="spec-section">
+    <div class="spec-section-head">
+      <h2>07 · Chrome</h2>
+      <p>Two persistent controls in the top bar: the spend meter and the demo role switcher. Both fit at 30 px height so the bar stays quiet.</p>
+    </div>
+
+    <div class="spec-grid three">
+      <div class="spec">
+        <div class="spec-label"><span>Budget meter</span><span class="spec-id">C-17</span></div>
+        <div class="spec-demo stack">
+          <button class="budget" type="button" aria-label="LLM budget: 1.82 of 5.00 dollars used">
+            <span class="budget-label">LLM budget</span>
+            <span class="budget-track" aria-hidden="true"><span class="budget-fill" style="width:36%"></span></span>
+            <span class="budget-value">$1.82 / $5.00</span>
+          </button>
+          <button class="budget" type="button" aria-label="LLM budget: 4.62 of 5.00 dollars used">
+            <span class="budget-label">LLM budget</span>
+            <span class="budget-track" aria-hidden="true"><span class="budget-fill" data-tone="warn" style="width:92%"></span></span>
+            <span class="budget-value">$4.62 / $5.00</span>
+          </button>
+          <button class="budget" type="button" aria-label="LLM budget: 5.00 of 5.00 dollars used, exhausted">
+            <span class="budget-label">LLM budget</span>
+            <span class="budget-track" aria-hidden="true"><span class="budget-fill" data-tone="full" style="width:100%"></span></span>
+            <span class="budget-value">$5.00 / $5.00</span>
+          </button>
+        </div>
+        <p class="spec-note">Normal, warning and exhausted. At 100% the meter flips the console into Replay mode: agent tools stop, a persistent banner explains why, and reads stay available.</p>
+      </div>
+
+      <div class="spec spec-wide">
+        <div class="spec-label"><span>Role switcher · closed &amp; open</span><span class="spec-id">C-18</span></div>
+        <div class="spec-demo" style="align-items:flex-start;gap:22px">
+          <div class="role-switch">
+            <button class="role-btn" type="button" aria-haspopup="listbox" aria-expanded="true" aria-controls="sheet-role-menu">
+              <span class="role-meta">
+                <span class="role-word">Role</span>
+                <span class="role-name">Approver</span>
+              </span>
+              <svg class="od-icon i-12 dim" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+            </button>
+          </div>
+          <div style="flex:1 1 260px;max-width:300px">
+            <div class="menu" id="sheet-role-menu" role="listbox" aria-label="Switch demo role" style="position:static;width:100%;max-width:300px;box-shadow:none">
+              <button class="menu-item" type="button" role="option" aria-selected="false">
+                <strong>Viewer</strong>
+                <span>Read-only. Cannot approve anything.</span>
+              </button>
+              <button class="menu-item" type="button" role="option" aria-selected="false">
+                <strong>Operator</strong>
+                <span>Can investigate and execute. Cannot approve.</span>
+              </button>
+              <button class="menu-item" type="button" role="option" aria-selected="true">
+                <strong>Approver <svg class="od-icon i-12 check" aria-hidden="true"><use href="#i-check"/></svg></strong>
+                <span>Can grant or reject infrastructure actions.</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <p class="spec-note">Each option states what it can and cannot do, so the switch is self-documenting. The selected role is marked with a check as well as its filled state; changing role never changes incident data, only permission gates.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ 08 LIGHT PARITY ============================ -->
+  <section class="spec-section">
+    <div class="spec-section-head">
+      <h2>08 · Light-theme parity</h2>
+      <p>The Incident workspace ships in light. The same components resolve through the light token set with AA contrast; nothing is inverted or recoloured by hand.</p>
+    </div>
+
+    <div class="spec spec-wide">
+      <div class="spec-label"><span>Same components · data-theme="light"</span><span class="spec-id">C-19</span></div>
+      <div data-theme="light" style="background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:14px">
+        <div class="spec-demo" style="border-color:var(--line);background:var(--panel-2)">
+          <span class="sev" data-sev="critical"><svg class="od-icon i-12" aria-hidden="true"><use href="#i-sev-critical"/></svg>Critical</span>
+          <span class="sev" data-sev="high"><svg class="od-icon i-12" aria-hidden="true"><use href="#i-sev-high"/></svg>High</span>
+          <span class="sev" data-sev="medium"><svg class="od-icon i-12" aria-hidden="true"><use href="#i-sev-medium"/></svg>Medium</span>
+          <span class="sev" data-sev="low"><svg class="od-icon i-12" aria-hidden="true"><use href="#i-sev-low"/></svg>Low</span>
+          <span class="tier"><span class="tier-code">T1</span>Tier 1</span>
+          <span class="status" data-status="awaiting"><svg class="od-icon i-12" aria-hidden="true"><use href="#i-lock"/></svg>Awaiting approval</span>
+          <button class="evidence-chip" type="button">ev_7f3a</button>
+          <span class="conf" data-conf="high"><span class="conf-bars" aria-hidden="true"><i></i><i></i><i></i></span>High confidence</span>
+          <span class="risk" data-risk="medium">Risk · medium</span>
+          <span class="mini-pill">12:40</span>
+        </div>
+      </div>
+      <p class="spec-note">Light borders do the work that glow does in dark. Severity text tokens darken for contrast on white, and the accent shifts to a deeper teal — the semantics never change between modes.</p>
+    </div>
+  </section>
+
+  <!-- ============================ 09 RULES ============================ -->
+  <section class="spec-section">
+    <div class="spec-section-head">
+      <h2>09 · Composition rules</h2>
+      <p>How the parts combine. These are the constraints that keep the console trustworthy, not decorative preferences.</p>
+    </div>
+
+    <div class="split-note">
+      <div>
+        <h4>Facts before inferences</h4>
+        <p>Facts sit above hypotheses in the AI panel, in solid rows with direct evidence. A hypothesis may never appear above the fact that contradicts it.</p>
+      </div>
+      <div>
+        <h4>Actions stay human</h4>
+        <p>The agent drafts and recommends; only a human with the Approver role executes. Every gated action carries a risk label, a countdown, a rollback line and an audit hash.</p>
+      </div>
+      <div>
+        <h4>One accent, one meaning</h4>
+        <p>Teal marks agent provenance, focus and links. It never signals success or severity — green, amber and red do that, always paired with a word or glyph.</p>
+      </div>
+      <div>
+        <h4>Nothing hides on failure</h4>
+        <p>Missing evidence, budget exhaustion, unavailable models and rejected approvals all render in place with a plain-language reason and a next step. No silent degradation.</p>
+      </div>
+    </div>
+
+    <p class="spec-note" style="margin-top:12px">Sample values on this sheet are the INC-1042 dataset: ev_7f3a · ev_19c2 · ev_2b10 · ev_44de · ev_9a01, APR-77, PRB-208, ops-agent-3.1 · prompt v12. Synthetic tenant <span class="mono">hh-demo-01</span>.</p>
+  </section>
+</main>
+
+</body>
+</html>

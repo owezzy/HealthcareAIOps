@@ -1,0 +1,2 @@
+# Conventional Commits (Commitizen). Use `uv run cz commit` to write one interactively.
+uv run --frozen cz check --commit-msg-file "$1"
