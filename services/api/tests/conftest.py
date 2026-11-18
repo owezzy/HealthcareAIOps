@@ -14,6 +14,7 @@ import pytest
 from alembic import command
 from alembic.config import Config
 
+from aiops_api.ingestion.domain import Alert, IngestOutcome
 from aiops_contracts.usage import LlmUsage
 
 API_DIR = Path(__file__).resolve().parents[1]
@@ -40,6 +41,32 @@ class InMemoryUsageRepository:
 @pytest.fixture
 def usage_repo() -> InMemoryUsageRepository:
     return InMemoryUsageRepository()
+
+
+class InMemoryAlertStore:
+    def __init__(self) -> None:
+        self.alerts: dict[tuple, Alert] = {}
+        self.jobs: list[str] = []
+
+    def record(self, alerts: list[Alert]) -> IngestOutcome:
+        stored = updated = unchanged = 0
+        for alert in alerts:
+            existing = self.alerts.get(alert.key)
+            if existing is None:
+                stored += 1
+            elif (existing.status, existing.ends_at) != (alert.status, alert.ends_at):
+                updated += 1
+            else:
+                unchanged += 1
+                continue
+            self.alerts[alert.key] = alert
+            self.jobs.append(f"{alert.fingerprint}:{alert.status}")
+        return IngestOutcome(stored, updated, unchanged)
+
+
+@pytest.fixture
+def alert_store() -> InMemoryAlertStore:
+    return InMemoryAlertStore()
 
 
 def _pg_bin(name: str) -> str | None:

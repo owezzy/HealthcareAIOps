@@ -10,8 +10,17 @@ Paths as each service serves them. In production only the web origin is public; 
 | `GET /ready` | none | no | `{"status": "ready"}`, or `503` if the database is unreachable |
 | `POST /internal/usage` | `Authorization: Bearer <AIOPS_INTERNAL_TOKEN>` | no | `201 {"status": "recorded"}`, or `200 {"status": "duplicate"}` for a known `call_id` |
 | `GET /api/budget/today` | none | yes | `BudgetStatus` for the current UTC day |
+| `POST /internal/alerts` | `Authorization: Bearer <AIOPS_INTERNAL_TOKEN>` | no | Alertmanager webhook (version 4). `{"stored", "updated", "unchanged"}` counts; `422` for an invalid payload |
 
 `POST /internal/usage` errors: `401` wrong or missing token, `503` no token configured, `422` invalid record (for example a metered call without token counts, or a timestamp without a time zone).
+
+### `POST /internal/alerts`
+
+Takes Alertmanager's standard webhook body (`version` `"4"`, 1–1,000 alerts). Each alert needs an `alertname` label, a `fingerprint` and time-zone-aware `startsAt`. The `component` and `severity` labels are stored when present.
+
+- Identity is `(fingerprint, startsAt)`: a replayed webhook stores nothing new (Alertmanager retries on failure).
+- A change, such as firing to resolved, updates the same alert.
+- Every new or changed alert queues one `correlate` job in the same transaction as the alert ([ADR-0003](../adr/0003-postgres-queue-not-rabbitmq.md)).
 
 ### `LlmUsage` (request body of `POST /internal/usage`)
 

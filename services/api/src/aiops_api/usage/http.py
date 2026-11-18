@@ -1,9 +1,9 @@
-import hmac
 from datetime import UTC, datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, Request, Response, status
 
+from aiops_api.auth import require_service_token, settings_of
 from aiops_api.settings import Settings
 from aiops_api.usage import use_cases
 from aiops_api.usage.ports import UsageRepository
@@ -14,22 +14,6 @@ router = APIRouter()
 
 def _repo(request: Request) -> UsageRepository:
     return request.app.state.usage_repo
-
-
-def _settings(request: Request) -> Settings:
-    return request.app.state.settings
-
-
-def require_service_token(
-    settings: Annotated[Settings, Depends(_settings)],
-    authorization: Annotated[str | None, Header()] = None,
-) -> None:
-    """Internal endpoints accept only the agent's service token. Fail closed if unset."""
-    if settings.internal_token is None:
-        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "internal token not configured")
-    presented = (authorization or "").removeprefix("Bearer ")
-    if not hmac.compare_digest(presented.encode(), settings.internal_token.encode()):
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "invalid service token")
 
 
 @router.post(
@@ -54,7 +38,7 @@ def post_usage(
 @router.get("/api/budget/today", tags=["budget"])
 def get_budget_today(
     repo: Annotated[UsageRepository, Depends(_repo)],
-    settings: Annotated[Settings, Depends(_settings)],
+    settings: Annotated[Settings, Depends(settings_of)],
 ) -> BudgetStatus:
     """Today's (UTC) LLM spend against the cap, for the console's budget meter."""
     return use_cases.daily_budget(

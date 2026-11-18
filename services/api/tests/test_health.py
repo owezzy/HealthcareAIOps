@@ -3,7 +3,11 @@ from fastapi.testclient import TestClient
 from aiops_api.app import create_app
 from aiops_api.settings import Settings
 
-SETTINGS = Settings(database_url="unused", internal_token="t", daily_llm_budget_usd=5.0)
+SETTINGS = Settings(
+    database_url="postgresql+psycopg://test@localhost/unused",
+    internal_token="t",
+    daily_llm_budget_usd=5.0,
+)
 
 
 def test_health_reports_ok(usage_repo) -> None:

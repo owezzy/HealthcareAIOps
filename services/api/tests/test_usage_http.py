@@ -14,7 +14,7 @@ AUTH = {"Authorization": f"Bearer {TOKEN}"}
 
 def _settings(token: str | None = TOKEN, cap: float = 1.0, call_cap: int = 300) -> Settings:
     return Settings(
-        database_url="unused",
+        database_url="postgresql+psycopg://test@localhost/unused",
         internal_token=token,
         daily_llm_budget_usd=cap,
         daily_llm_call_cap=call_cap,
