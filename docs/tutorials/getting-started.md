@@ -82,7 +82,9 @@ Open <http://localhost:5173/spike/assistant> and send a message.
 
 The reply streams in word by word: `Spike OK. Agent received: <your message>`. That message went from Angular to the CopilotKit runtime, to the LangGraph agent over AG-UI, and back.
 
-By default the agent uses `fake:echo`, a keyless model that behaves like a real provider: it streams, and it reports token usage. Each message is recorded as an LLM call, priced at zero, so the budget meter stays at `$0.00`. To use a real model, set `AIOPS_LLM_MODEL` and the provider's key (see [Configuration](../reference/configuration.md)).
+`make dev` uses NVIDIA's Nemotron 3 Nano 4B, running locally in Ollama: free, no key. Install [Ollama](https://ollama.com) and run `ollama pull nemotron-3-nano:4b` first (2.9 GB). Expect a few seconds per reply on a laptop.
+
+No Ollama? Start with `AIOPS_LLM_MODEL=fake:echo make dev`. The fake model echoes your message, streams it and reports usage like a real provider. Either way each message is recorded as an LLM call priced at zero, so the budget meter stays at `$0.00`. For hosted models, see [Configuration](../reference/configuration.md).
 
 ## 7. Run the checks
 

@@ -12,6 +12,8 @@ API_PORT   ?= 8000
 export AIOPS_DATABASE_URL   ?= postgresql+psycopg://aiops:aiops@localhost:5432/aiops
 export AIOPS_INTERNAL_TOKEN ?= dev-internal-token
 export AIOPS_API_URL        ?= http://localhost:$(API_PORT)
+# Free local NVIDIA model via Ollama (`ollama pull nemotron-3-nano:4b`). Use fake:echo with no Ollama.
+export AIOPS_LLM_MODEL      ?= ollama:nemotron-3-nano:4b
 
 help: ## List available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'

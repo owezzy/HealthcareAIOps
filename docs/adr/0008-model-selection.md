@@ -37,3 +37,10 @@ Model swaps are config changes; prompt changes are re-evaluated on all three.
 - Verify each provider with a real key before the first eval: one streamed call (expect a metered usage record) and one structured call. If a provider ignores `include_usage`, its calls show up as unmetered and the budget reads "unknown".
 
 - Ollama `:cloud` models are billed as Ollama credits with no per-token price in `config/model-prices.yaml`, so their cost records as unknown. The daily call cap (budget enforcement) is what limits them.
+
+## Local development model: NVIDIA Nemotron 3 Nano 4B via Ollama (2026-11-18)
+- `make dev` uses `ollama:nemotron-3-nano:4b` (2.9 GB, local, free; supports tool calling). The 30B variant needs 18–24 GB and does not fit the 16 GB development Mac; the `:cloud` variant was retired and Ollama cloud needs credits.
+- Verified with a real call through the AG-UI agent: the stream arrived in 20 deltas and **usage was reported** (`metered`, 29 input / 89 output tokens, thread recorded). Priced at zero in `config/model-prices.yaml`.
+- Structured Findings (`json_schema`, not strict): the output matched the schema shape, but failed the contract rule "root_cause must be one of the hypotheses" on the first attempt, in 39 s. The repair loop must handle this, and the rule's design is under review (task filed).
+- CI and tests keep the keyless `fake:echo` default.
+
